@@ -75,15 +75,15 @@ func main() {
 					Name:        "list",
 					Usage:       "list records",
 					Action:      cliListRecords,
-					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure records list --name France --tag tester=geocube",
+					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure records list --name France* --tag constellation=SENTINEL1",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "name-like", Usage: "filter by name (support *, ? and (?i)-suffix for case-insensitivity)"},
 						cli.StringFlag{Name: "aoi-path", Usage: "filter records that intersect geojson"},
 						cli.StringFlag{Name: "from-time", Usage: "format: yyyy-MM-dd [HH:mm]"},
 						cli.StringFlag{Name: "to-time", Usage: "format: yyyy-MM-dd [HH:mm]"},
-						cli.StringSliceFlag{Name: "tag", Usage: "format: --tag key=value --tag key2=value2"},
-						cli.Int64Flag{Name: "limit", Value: 1000},
-						cli.Int64Flag{Name: "page"},
+						cli.StringSliceFlag{Name: "tag", Usage: "filter by tags (format: --tag key=value --tag key2=value2 - support *, ? and (?i)-suffix for case-insensitivity)"},
+						cli.Int64Flag{Name: "limit", Value: 1000, Usage: "limit the number of records returned"},
+						cli.Int64Flag{Name: "page", Usage: "in combination with limit, return the next records - start at 0"},
 						cli.BoolFlag{Name: "with-aoi", Usage: "load and return AOI (may be big!)"},
 						cli.StringSliceFlag{Name: "disp", Usage: "only display specific attributes (among name, id, aoi-id, datetime)"},
 					},
@@ -92,7 +92,7 @@ func main() {
 					Name:        "create",
 					Usage:       "create record",
 					Action:      cliCreateRecord,
-					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure records create --aoi-id d0d6f8a4-5b9f-4ee4-a53a-75c990e8f890 --name France --time \"2020-12-10 15:55\" --tag tester=geocube",
+					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure records create --aoi-id d0d6f8a4-5b9f-4ee4-a53a-75c990e8f890 --name France --time \"2020-12-10 15:55\" --tag constellation=SENTINEL1",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "name", Required: true},
 						cli.StringFlag{Name: "aoi-id", Usage: "aoi-id or aoi-path is required"},
@@ -624,7 +624,10 @@ func cliTileAOI(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	for _, t := range tiles {
+	for t := range tiles {
+		if err := t.Error(); err != nil {
+			log.Fatalf(err.Error())
+		}
 		fmt.Printf("(%f, %f, %f, %f, %f, %f)*[%d, %d] crs=%s\n",
 			t.Transform[0], t.Transform[1], t.Transform[2], t.Transform[3], t.Transform[4], t.Transform[5],
 			t.Width, t.Height, t.CRS)

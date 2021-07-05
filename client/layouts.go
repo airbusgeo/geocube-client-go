@@ -14,6 +14,17 @@ type Tile struct {
 	Transform     [6]float64
 	CRS           string
 	Width, Height int32
+	err           error
+}
+
+// TileError is an erroneous tile
+func TileError(err error) Tile {
+	return Tile{err: err}
+}
+
+// Error returns an error if the tile is an erroneous tile
+func (t *Tile) Error() error {
+	return t.err
 }
 
 func NewTileFromPb(pbt *pb.Tile) *Tile {
@@ -57,7 +68,7 @@ func (c Client) ListLayouts(nameLike string) ([]*Layout, error) {
 	return layouts, nil
 }
 
-func (c Client) TileAOI(aoi AOI, crs string, resolution float32, width_px, height_px int32) ([]Tile, error) {
+func (c Client) TileAOI(aoi AOI, crs string, resolution float32, width_px, height_px int32) (<-chan Tile, error) {
 	stream, err := c.gcc.TileAOI(c.ctx,
 		&pb.TileAOIRequest{
 			Aoi:        pbFromAOI(aoi),
@@ -70,19 +81,23 @@ func (c Client) TileAOI(aoi AOI, crs string, resolution float32, width_px, heigh
 		return nil, grpcError(err)
 	}
 
-	tiles := []Tile{}
-	for {
-		resp, err := stream.Recv()
-		if err == io.EOF {
-			break
+	tiles := make(chan Tile)
+	go func() {
+		for {
+			resp, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				tiles <- TileError(err)
+				break
+			}
+			for _, tile := range resp.Tiles {
+				tiles <- *NewTileFromPb(tile)
+			}
 		}
-		if err != nil {
-			return nil, err
-		}
-		for _, tile := range resp.Tiles {
-			tiles = append(tiles, *NewTileFromPb(tile))
-		}
-	}
+		close(tiles)
+	}()
 
 	return tiles, nil
 }
