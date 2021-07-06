@@ -213,3 +213,34 @@ func (c Client) GetCube(instancesID []string, tags map[string]string, fromTime, 
 	}
 	return NewCubeIterator(stream)
 }
+
+func (c Client) GetCubeFromTile(instancesID []string, tags map[string]string, fromTime, toTime time.Time, tile *Tile, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
+	fromTs := timestamppb.New(fromTime)
+	if err := fromTs.CheckValid(); err != nil {
+		return nil, err
+	}
+	toTs := timestamppb.New(toTime)
+	if err := toTs.CheckValid(); err != nil {
+		return nil, err
+	}
+	geoTransform := pb.GeoTransform{A: tile.Transform[0],
+		B: tile.Transform[1], C: tile.Transform[2],
+		D: tile.Transform[3], E: tile.Transform[4],
+		F: tile.Transform[5]}
+	size := pb.Size{Width: int32(tile.Width), Height: int32(tile.Height)}
+	stream, err := c.gcc.GetCube(c.ctx,
+		&pb.GetCubeRequest{
+			RecordsLister:    &pb.GetCubeRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
+			InstancesId:      instancesID,
+			Crs:              tile.CRS,
+			PixToCrs:         &geoTransform,
+			Size:             &size,
+			CompressionLevel: int32(compression),
+			HeadersOnly:      headersOnly,
+			Format:           pb.FileFormat(format),
+		})
+	if err != nil {
+		return nil, grpcError(err)
+	}
+	return NewCubeIterator(stream)
+}
