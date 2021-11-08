@@ -370,7 +370,7 @@ func main() {
 						cli.BoolFlag{Name: "bands-interleave", Usage: "Interleave bands"},
 						cli.IntFlag{Name: "compression", Value: 1, Usage: "0: No, 1: Lossless, 2: Lossy"},
 						cli.BoolFlag{Name: "overviews", Usage: "Create overviews"},
-						cli.StringFlag{Name: "downsampling-alg", Value: "NEAR", Usage: "NEAR BILINEAR CUBIC CUBICSPLINE LANCZOS AVERAGE MODE MAX MIN MED Q1 Q3 (for overviews)"},
+						cli.StringFlag{Name: "resampling-alg", Value: "NEAR", Usage: "NEAR BILINEAR CUBIC CUBICSPLINE LANCZOS AVERAGE MODE MAX MIN MED Q1 Q3 (for overviews and reprojection)"},
 						cli.IntFlag{Name: "storage-class", Value: 0, Usage: "0: STANDARD, 1:INFREQUENT, 2: ARCHIVE, 3:DEEPARCHIVE"},
 					},
 				},
@@ -378,11 +378,11 @@ func main() {
 					Name:        "consolidate",
 					Usage:       "consolidate datasets",
 					Action:      cliConsolidateDatasets,
-					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure operation consolidate --name consolidation --instance-id d886fc5f-eabb-4c53-99d6-ae80e66e3b15 --layout-id 05688435-1d45-4fea-a799-a470928b4f4e --records-id  c3419e67-3aef-4cc1-95be-970dfcf7aa25",
+					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure operation consolidate --name consolidation --instance-id d886fc5f-eabb-4c53-99d6-ae80e66e3b15 --layout my_layout --records-id  c3419e67-3aef-4cc1-95be-970dfcf7aa25",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "name", Required: true},
 						cli.StringFlag{Name: "instance-id", Required: true, Usage: "uuid of variable instance"},
-						cli.StringFlag{Name: "layout-id", Required: true},
+						cli.StringFlag{Name: "layout", Required: true, Usage: "Name of the layout"},
 						cli.StringFlag{Name: "records-id", Usage: "list of record uuid, coma-separated (cannot be used with from-time, to-time or tag)"},
 						cli.StringFlag{Name: "from-time", Usage: "filter by date (format: yyyy-MM-dd [HH:mm])(cannot be used with records-id)"},
 						cli.StringFlag{Name: "to-time", Usage: "filter by date (format: yyyy-MM-dd [HH:mm])(cannot be used with records-id)"},
@@ -594,13 +594,9 @@ func cliCreateLayout(c *cli.Context) {
 		}
 	}
 
-	id, err := client.CreateLayout(c.String("name"), gridFlags, gridParameters, c.Int64("block-size"), c.Int64("block-size"), c.Int64("max-records"))
-
-	if err != nil {
+	if err := client.CreateLayout(c.String("name"), gridFlags, gridParameters, c.Int64("block-size"), c.Int64("block-size"), c.Int64("max-records")); err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("Layout with id=%s", id)
 }
 
 func cliListLayouts(c *cli.Context) {
@@ -880,7 +876,7 @@ func cliConfigConsolidation(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = client.ConfigConsolidation(c.String("variable-id"), dformat, c.Float64("exponent"), c.Bool("bands-interleave"), c.Int("compression"), c.Bool("overviews"), c.String("downsampling-alg"), c.Int("storage-class"))
+	err = client.ConfigConsolidation(c.String("variable-id"), dformat, c.Float64("exponent"), c.Bool("bands-interleave"), c.Int("compression"), c.Bool("overviews"), c.String("resampling-alg"), c.Int("storage-class"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -910,7 +906,7 @@ func cliConsolidateDatasets(c *cli.Context) {
 	var id string
 	var err error
 	if c.IsSet("records-id") {
-		id, err = client.ConsolidateDatasetsFromRecords(c.String("name"), c.String("instance-id"), c.String("layout-id"), toSlice(c.String("records-id"), ","))
+		id, err = client.ConsolidateDatasetsFromRecords(c.String("name"), c.String("instance-id"), c.String("layout"), toSlice(c.String("records-id"), ","))
 	} else {
 		var fromT, toT time.Time
 		if c.IsSet("from-time") {
@@ -920,7 +916,7 @@ func cliConsolidateDatasets(c *cli.Context) {
 			toT = mustParseTime(c.String("to-time"))
 		}
 		tags := mustParseDict(c.StringSlice("tag"))
-		id, err = client.ConsolidateDatasetsFromFilters(c.String("name"), c.String("instance-id"), c.String("layout-id"), tags, fromT, toT)
+		id, err = client.ConsolidateDatasetsFromFilters(c.String("name"), c.String("instance-id"), c.String("layout"), tags, fromT, toT)
 	}
 
 	if err != nil {

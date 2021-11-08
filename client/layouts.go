@@ -36,21 +36,19 @@ func NewTileFromPb(pbt *pb.Tile) *Tile {
 	}
 }
 
-func (c Client) CreateLayout(name string, gridFlags []string, gridParameters map[string]string, blockXSize, blockYSize, maxRecords int64) (string, error) {
-	resp, err := c.gcc.CreateLayout(c.ctx,
+func (c Client) CreateLayout(name string, gridFlags []string, gridParameters map[string]string, blockXSize, blockYSize, maxRecords int64) error {
+	if _, err := c.gcc.CreateLayout(c.ctx,
 		&pb.CreateLayoutRequest{Layout: &pb.Layout{
 			Name:           name,
 			GridFlags:      gridFlags,
 			GridParameters: gridParameters,
 			BlockXSize:     blockXSize,
 			BlockYSize:     blockYSize,
-			MaxRecords:     maxRecords}})
-
-	if err != nil {
-		return "", grpcError(err)
+			MaxRecords:     maxRecords}}); err != nil {
+		return grpcError(err)
 	}
 
-	return resp.GetId(), nil
+	return nil
 }
 
 func (c Client) ListLayouts(nameLike string) ([]*Layout, error) {
@@ -105,13 +103,12 @@ func (c Client) TileAOI(aoi AOI, crs string, resolution float32, width_px, heigh
 // ToString returns a string with a representation of the layout
 func (l *Layout) ToString() string {
 	s := fmt.Sprintf("Layout %s:\n"+
-		"  Id:              %s\n"+
 		"  Block XSize:     %d\n"+
 		"  Block YSize:     %d\n"+
 		"  Max records:     %d\n"+
 		"  Grid flags:      %s\n"+
 		"  Grid parameters:\n",
-		l.Name, l.Id, l.BlockXSize, l.BlockYSize, l.MaxRecords, strings.Join(l.GridFlags, " "))
+		l.Name, l.BlockXSize, l.BlockYSize, l.MaxRecords, strings.Join(l.GridFlags, " "))
 	appendDict(l.GridParameters, &s)
 	return s
 }

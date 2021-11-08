@@ -54,7 +54,7 @@ func (c Client) CleanJobs(nameLike, state string) (int32, error) {
 }
 
 // ConfigConsolidation configures the parameters associated to this variable
-func (c Client) ConfigConsolidation(variableID string, dformat *pb.DataFormat, exponent float64, bandsInterleave bool, compression int, createOverviews bool, downsamplingAlg string, storageClass int) error {
+func (c Client) ConfigConsolidation(variableID string, dformat *pb.DataFormat, exponent float64, bandsInterleave bool, compression int, createOverviews bool, resamplingAlg string, storageClass int) error {
 	_, err := c.gcc.ConfigConsolidation(c.ctx, &pb.ConfigConsolidationRequest{
 		VariableId: variableID,
 		ConsolidationParams: &pb.ConsolidationParams{
@@ -63,7 +63,7 @@ func (c Client) ConfigConsolidation(variableID string, dformat *pb.DataFormat, e
 			BandsInterleave: bandsInterleave,
 			Compression:     pb.ConsolidationParams_Compression(compression),
 			CreateOverviews: createOverviews,
-			DownsamplingAlg: toResampling(downsamplingAlg),
+			ResamplingAlg:   toResampling(resamplingAlg),
 			StorageClass:    pb.StorageClass(storageClass),
 		}})
 	return grpcError(err)
@@ -79,11 +79,11 @@ func (c Client) GetConsolidationParams(variableID string) (*ConsolidationParams,
 }
 
 // ConsolidateDatasetsFromRecords starts a consolidation job of the datasets defined by the given parameters
-func (c Client) ConsolidateDatasetsFromRecords(name string, instanceID, layoutID string, recordsID []string) (string, error) {
+func (c Client) ConsolidateDatasetsFromRecords(name string, instanceID, layoutName string, recordsID []string) (string, error) {
 	resp, err := c.gcc.Consolidate(c.ctx,
 		&pb.ConsolidateRequest{
 			JobName:       name,
-			LayoutId:      layoutID,
+			LayoutName:    layoutName,
 			InstanceId:    instanceID,
 			RecordsLister: &pb.ConsolidateRequest_Records{Records: &pb.RecordList{Ids: recordsID}},
 		})
@@ -96,7 +96,7 @@ func (c Client) ConsolidateDatasetsFromRecords(name string, instanceID, layoutID
 }
 
 // ConsolidateDatasetsFromFilters starts a consolidation job of the datasets defined by the given parameters
-func (c Client) ConsolidateDatasetsFromFilters(name string, instanceID, layoutID string, tags map[string]string, fromTime, toTime time.Time) (string, error) {
+func (c Client) ConsolidateDatasetsFromFilters(name string, instanceID, layoutName string, tags map[string]string, fromTime, toTime time.Time) (string, error) {
 	fromTs := timestamppb.New(fromTime)
 	if err := fromTs.CheckValid(); err != nil {
 		return "", err
@@ -108,7 +108,7 @@ func (c Client) ConsolidateDatasetsFromFilters(name string, instanceID, layoutID
 	resp, err := c.gcc.Consolidate(c.ctx,
 		&pb.ConsolidateRequest{
 			JobName:       name,
-			LayoutId:      layoutID,
+			LayoutName:    layoutName,
 			InstanceId:    instanceID,
 			RecordsLister: &pb.ConsolidateRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
 		})
