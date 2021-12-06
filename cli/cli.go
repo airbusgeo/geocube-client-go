@@ -558,7 +558,7 @@ func cliCreateRecord(c *cli.Context) {
 		aoiID = id
 	}
 
-	id, err := client.CreateRecords(c.String("name"), aoiID, []time.Time{t}, mustParseDict(c.StringSlice("tag")))
+	id, err := client.CreateRecord(c.String("name"), aoiID, t, mustParseDict(c.StringSlice("tag")))
 	if err != nil {
 		log.Fatal(err)
 	}

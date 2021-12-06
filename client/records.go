@@ -81,19 +81,42 @@ func (c Client) GetAOI(aoiID string) (AOI, error) {
 	return *aoiFromPb(resp.Aoi), nil
 }
 
-// CreateRecords creates a batch of records with an aoi, one record for each time in times
-func (c Client) CreateRecords(name, aoiID string, times []time.Time, tags map[string]string) ([]string, error) {
-	records := make([]*pb.NewRecord, len(times))
-	for i, t := range times {
+// CreateRecord creates a record with an aoi, a name and a date
+func (c Client) CreateRecord(name, aoiID string, date time.Time, tags map[string]string) ([]string, error) {
+	ts := timestamppb.New(date)
+	if err := ts.CheckValid(); err != nil {
+		return nil, err
+	}
+	record := &pb.NewRecord{
+		Name:  name,
+		Time:  ts,
+		Tags:  tags,
+		AoiId: aoiID}
+
+	resp, err := c.gcc.CreateRecords(c.ctx, &pb.CreateRecordsRequest{Records: []*pb.NewRecord{record}})
+	if err != nil {
+		return nil, grpcError(err)
+	}
+	return resp.GetIds(), nil
+}
+
+// CreateRecords creates a batch of records with aois, names and dates
+func (c Client) CreateRecords(names, aoiIDs []string, dates []time.Time, tags []map[string]string) ([]string, error) {
+	if len(names) != len(aoiIDs) || len(names) != len(dates) || len(names) != len(tags) {
+		return nil, fmt.Errorf("CreateRecords: all parameters must be the same length")
+	}
+
+	records := make([]*pb.NewRecord, len(dates))
+	for i, t := range dates {
 		ts := timestamppb.New(t)
 		if err := ts.CheckValid(); err != nil {
 			return nil, err
 		}
 		records[i] = &pb.NewRecord{
-			Name:  name,
+			Name:  names[i],
 			Time:  ts,
-			Tags:  tags,
-			AoiId: aoiID}
+			Tags:  tags[i],
+			AoiId: aoiIDs[i]}
 	}
 
 	resp, err := c.gcc.CreateRecords(c.ctx, &pb.CreateRecordsRequest{Records: records})
