@@ -130,9 +130,10 @@ func (j *Job) ToString() string {
 		"  Failed tasks:    %d\n"+
 		"  Creation:        %s\n"+
 		"  LastUpdate:      %s\n"+
-		"  Logs:            \n  %s",
+		"  Logs:            \n - %s\n"+
+		"  Errors:          \n - %s",
 		j.Name, j.Id, j.Type, j.State, j.ActiveTasks, j.FailedTasks, j.CreationTime.AsTime().Format("2 Jan 2006 15:04:05"),
-		j.LastUpdateTime.AsTime().Format("2 Jan 2006 15:04:05"), strings.Join(j.Log, "\n  "))
+		j.LastUpdateTime.AsTime().Format("2 Jan 2006 15:04:05"), strings.Join(j.Logs, "\n - "), strings.Join(j.Errors, "\n - "))
 }
 
 // ListJobs returns the jobs with a name like name (or all if name="")
