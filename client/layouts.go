@@ -36,6 +36,21 @@ func NewTileFromPb(pbt *pb.Tile) *Tile {
 	}
 }
 
+func NewRegularLayout(crs string, resolution float64, sizeXPx, sizeYPx, originX, originY int64) Layout {
+	return Layout{
+		GridFlags: []string{},
+		GridParameters: map[string]string{
+			"grid":        "regular",
+			"crs":         crs,
+			"resolution":  fmt.Sprintf("%v", resolution),
+			"cell_x_size": fmt.Sprintf("%v", sizeXPx),
+			"cell_y_size": fmt.Sprintf("%v", sizeYPx),
+			"ox":          fmt.Sprintf("%v", originX),
+			"oy":          fmt.Sprintf("%v", originY),
+		},
+	}
+}
+
 func (c Client) CreateLayout(name string, gridFlags []string, gridParameters map[string]string, blockXSize, blockYSize, maxRecords int64) error {
 	if _, err := c.gcc.CreateLayout(c.ctx,
 		&pb.CreateLayoutRequest{Layout: &pb.Layout{
@@ -66,15 +81,17 @@ func (c Client) ListLayouts(nameLike string) ([]*Layout, error) {
 	return layouts, nil
 }
 
-func (c Client) TileAOI(aoi AOI, crs string, resolution float32, width_px, height_px int32) (<-chan Tile, error) {
-	stream, err := c.gcc.TileAOI(c.ctx,
-		&pb.TileAOIRequest{
-			Aoi:        pbFromAOI(aoi),
-			Crs:        crs,
-			Resolution: resolution,
-			SizePx:     &pb.Size{Width: width_px, Height: height_px},
-		})
+func (c Client) TileAOI(aoi AOI, layoutName string, layout *Layout) (<-chan Tile, error) {
+	req := &pb.TileAOIRequest{Aoi: pbFromAOI(aoi)}
+	if layout != nil {
+		req.Identifier = &pb.TileAOIRequest_Layout{Layout: (*pb.Layout)(layout)}
+	} else if layoutName != "" {
+		req.Identifier = &pb.TileAOIRequest_LayoutName{LayoutName: layoutName}
+	} else {
+		return nil, fmt.Errorf("TileAOI: either layoutName or layout must be specified")
+	}
 
+	stream, err := c.gcc.TileAOI(c.ctx, req)
 	if err != nil {
 		return nil, grpcError(err)
 	}

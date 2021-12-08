@@ -89,8 +89,8 @@ func (cit *CubeIterator) Next() bool {
 		}
 
 		// Reset currval
-		cit.currval = CubeElem{Records: make([]*Record, len(header.Records))}
-		for i, r := range header.Records {
+		cit.currval = CubeElem{Records: make([]*Record, len(header.GroupedRecords.Records))}
+		for i, r := range header.GroupedRecords.Records {
 			cit.currval.Records[i] = recordFromPb(r)
 		}
 
@@ -171,7 +171,7 @@ func (cit *CubeIterator) Err() error {
 func (c Client) GetCubeFromRecords(instancesID, recordsID []string, crs string, pix2crs [6]float64, sizeX, sizeY int64, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
 	stream, err := c.gcc.GetCube(c.ctx,
 		&pb.GetCubeRequest{
-			RecordsLister:    &pb.GetCubeRequest_Records{Records: &pb.RecordList{Ids: recordsID}},
+			RecordsLister:    &pb.GetCubeRequest_Records{Records: &pb.RecordIdList{Ids: recordsID}},
 			InstancesId:      instancesID,
 			Crs:              crs,
 			PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},

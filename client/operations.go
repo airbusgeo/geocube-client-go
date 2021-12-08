@@ -54,17 +54,17 @@ func (c Client) CleanJobs(nameLike, state string) (int32, error) {
 }
 
 // ConfigConsolidation configures the parameters associated to this variable
-func (c Client) ConfigConsolidation(variableID string, dformat *pb.DataFormat, exponent float64, bandsInterleave bool, compression int, createOverviews bool, resamplingAlg string, storageClass int) error {
+func (c Client) ConfigConsolidation(variableID string, dformat *pb.DataFormat, exponent float64, bandsInterleave bool, compression int, overviewsMinSize int, resamplingAlg string, storageClass int) error {
 	_, err := c.gcc.ConfigConsolidation(c.ctx, &pb.ConfigConsolidationRequest{
 		VariableId: variableID,
 		ConsolidationParams: &pb.ConsolidationParams{
-			Dformat:         dformat,
-			Exponent:        exponent,
-			BandsInterleave: bandsInterleave,
-			Compression:     pb.ConsolidationParams_Compression(compression),
-			CreateOverviews: createOverviews,
-			ResamplingAlg:   toResampling(resamplingAlg),
-			StorageClass:    pb.StorageClass(storageClass),
+			Dformat:          dformat,
+			Exponent:         exponent,
+			BandsInterleave:  bandsInterleave,
+			Compression:      pb.ConsolidationParams_Compression(compression),
+			OverviewsMinSize: int32(overviewsMinSize),
+			ResamplingAlg:    toResampling(resamplingAlg),
+			StorageClass:     pb.StorageClass(storageClass),
 		}})
 	return grpcError(err)
 }
@@ -85,7 +85,7 @@ func (c Client) ConsolidateDatasetsFromRecords(name string, instanceID, layoutNa
 			JobName:       name,
 			LayoutName:    layoutName,
 			InstanceId:    instanceID,
-			RecordsLister: &pb.ConsolidateRequest_Records{Records: &pb.RecordList{Ids: recordsID}},
+			RecordsLister: &pb.ConsolidateRequest_Records{Records: &pb.RecordIdList{Ids: recordsID}},
 		})
 
 	if err != nil {
@@ -130,10 +130,9 @@ func (j *Job) ToString() string {
 		"  Failed tasks:    %d\n"+
 		"  Creation:        %s\n"+
 		"  LastUpdate:      %s\n"+
-		"  Logs:            \n - %s\n"+
-		"  Errors:          \n - %s",
+		"  Logs:            \n - %s",
 		j.Name, j.Id, j.Type, j.State, j.ActiveTasks, j.FailedTasks, j.CreationTime.AsTime().Format("2 Jan 2006 15:04:05"),
-		j.LastUpdateTime.AsTime().Format("2 Jan 2006 15:04:05"), strings.Join(j.Logs, "\n - "), strings.Join(j.Errors, "\n - "))
+		j.LastUpdateTime.AsTime().Format("2 Jan 2006 15:04:05"), strings.Join(j.Logs, "\n - "))
 }
 
 // ListJobs returns the jobs with a name like name (or all if name="")

@@ -178,15 +178,16 @@ func main() {
 				},
 				{
 					Name:        "tiles",
-					Usage:       "tiles an aoi",
+					Usage:       "tiles an aoi on a layout or on a regular grid",
 					Action:      cliTileAOI,
 					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure layouts tiles --aoi-path france.geojson --crs epsg:2154 --resolution 15 --size-x 256 --size-y 256",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "aoi-path", Required: true, Usage: "json path"},
-						cli.StringFlag{Name: "crs", Required: true, Usage: "proj4, wkt, epsg crs"},
-						cli.Float64Flag{Name: "resolution", Required: true, Usage: "Resolution in crs"},
-						cli.IntFlag{Name: "size-x", Required: true, Usage: "Tile width"},
-						cli.IntFlag{Name: "size-y", Required: true, Usage: "Tile height"},
+						cli.StringFlag{Name: "layout", Usage: "layout name"},
+						cli.StringFlag{Name: "crs", Usage: "proj4, wkt, epsg crs"},
+						cli.Float64Flag{Name: "resolution", Usage: "Resolution in crs"},
+						cli.IntFlag{Name: "size-x", Usage: "Tile width"},
+						cli.IntFlag{Name: "size-y", Usage: "Tile height"},
 					},
 				},
 			},
@@ -369,7 +370,7 @@ func main() {
 						cli.Float64Flag{Name: "exponent", Value: 1, Usage: "for non-linear scaling between dformat and variable.dformat (1: linear scaling)"},
 						cli.BoolFlag{Name: "bands-interleave", Usage: "Interleave bands"},
 						cli.IntFlag{Name: "compression", Value: 1, Usage: "0: No, 1: Lossless, 2: Lossy"},
-						cli.BoolFlag{Name: "overviews", Usage: "Create overviews"},
+						cli.BoolFlag{Name: "overviews", Usage: "Create overviews up to min-size (0: No overview, -1: default=256)"},
 						cli.StringFlag{Name: "resampling-alg", Value: "NEAR", Usage: "NEAR BILINEAR CUBIC CUBICSPLINE LANCZOS AVERAGE MODE MAX MIN MED Q1 Q3 (for overviews and reprojection)"},
 						cli.IntFlag{Name: "storage-class", Value: 0, Usage: "0: STANDARD, 1:INFREQUENT, 2: ARCHIVE, 3:DEEPARCHIVE"},
 					},
@@ -615,7 +616,14 @@ func cliTileAOI(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	tiles, err := client.TileAOI(aoi, c.String("crs"), float32(c.Float64("resolution")), int32(c.Int("size-x")), int32(c.Int("size-y")))
+	var tiles <-chan gcclient.Tile
+	if c.String("layout") != "" {
+		tiles, err = client.TileAOI(aoi, c.String("layout"), nil)
+	} else {
+		layout := gcclient.NewRegularLayout(c.String("crs"), c.Float64("resolution"), c.Int64("size-x"), c.Int64("size-y"), 0, 0)
+		tiles, err = client.TileAOI(aoi, "", &layout)
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -876,7 +884,7 @@ func cliConfigConsolidation(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = client.ConfigConsolidation(c.String("variable-id"), dformat, c.Float64("exponent"), c.Bool("bands-interleave"), c.Int("compression"), c.Bool("overviews"), c.String("resampling-alg"), c.Int("storage-class"))
+	err = client.ConfigConsolidation(c.String("variable-id"), dformat, c.Float64("exponent"), c.Bool("bands-interleave"), c.Int("compression"), c.Int("overviews"), c.String("resampling-alg"), c.Int("storage-class"))
 	if err != nil {
 		log.Fatal(err)
 	}
