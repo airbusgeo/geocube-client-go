@@ -620,7 +620,7 @@ func cliTileAOI(c *cli.Context) {
 	if c.String("layout") != "" {
 		tiles, err = client.TileAOI(aoi, c.String("layout"), nil)
 	} else {
-		layout := gcclient.NewRegularLayout(c.String("crs"), c.Float64("resolution"), c.Int64("size-x"), c.Int64("size-y"), 0, 0)
+		layout := gcclient.NewRegularLayout("", c.String("crs"), c.Float64("resolution"), c.Int64("size-x"), c.Int64("size-y"), 0, 0, -1, -1, -1)
 		tiles, err = client.TileAOI(aoi, "", &layout)
 	}
 

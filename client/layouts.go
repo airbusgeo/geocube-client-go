@@ -36,8 +36,19 @@ func NewTileFromPb(pbt *pb.Tile) *Tile {
 	}
 }
 
-func NewRegularLayout(crs string, resolution float64, sizeXPx, sizeYPx, originX, originY int64) Layout {
+func NewRegularLayout(name, crs string, resolution float64, sizeXPx, sizeYPx, originX, originY, blockXSize, blockYSize, maxRecords int64) Layout {
+	if blockXSize == -1 {
+		blockXSize = 256
+	}
+	if blockYSize == -1 {
+		blockYSize = 256
+	}
+	if maxRecords == -1 {
+		maxRecords = 1000
+	}
+
 	return Layout{
+		Name:      name,
 		GridFlags: []string{},
 		GridParameters: map[string]string{
 			"grid":        "regular",
@@ -48,6 +59,9 @@ func NewRegularLayout(crs string, resolution float64, sizeXPx, sizeYPx, originX,
 			"ox":          fmt.Sprintf("%v", originX),
 			"oy":          fmt.Sprintf("%v", originY),
 		},
+		BlockXSize: blockXSize,
+		BlockYSize: blockYSize,
+		MaxRecords: maxRecords,
 	}
 }
 
