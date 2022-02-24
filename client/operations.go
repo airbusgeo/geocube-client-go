@@ -15,13 +15,13 @@ type Job pb.Job
 type ConsolidationParams pb.ConsolidationParams
 
 // IndexDataset indexes a dataset
-func (c Client) IndexDataset(uri string, managed bool, containerSubdir, recordID, instanceID string, bands []int64, dformat *pb.DataFormat, realMin, realMax, exponent float64) error {
+func (c Client) IndexDataset(uri string, managed bool, containerSubdir, recordID, instanceID string, bands []int64, dformat *DataFormat, realMin, realMax, exponent float64) error {
 	dataset := &pb.Dataset{
 		RecordId:        recordID,
 		InstanceId:      instanceID,
 		ContainerSubdir: containerSubdir,
 		Bands:           bands,
-		Dformat:         dformat,
+		Dformat:         (*pb.DataFormat)(dformat),
 		RealMinValue:    realMin,
 		RealMaxValue:    realMax,
 		Exponent:        exponent,
@@ -54,11 +54,11 @@ func (c Client) CleanJobs(nameLike, state string) (int32, error) {
 }
 
 // ConfigConsolidation configures the parameters associated to this variable
-func (c Client) ConfigConsolidation(variableID string, dformat *pb.DataFormat, exponent float64, bandsInterleave bool, compression int, overviewsMinSize int, resamplingAlg string, storageClass int) error {
+func (c Client) ConfigConsolidation(variableID string, dformat *DataFormat, exponent float64, bandsInterleave bool, compression int, overviewsMinSize int, resamplingAlg string, storageClass int) error {
 	_, err := c.gcc.ConfigConsolidation(c.ctx, &pb.ConfigConsolidationRequest{
 		VariableId: variableID,
 		ConsolidationParams: &pb.ConsolidationParams{
-			Dformat:          dformat,
+			Dformat:          (*pb.DataFormat)(dformat),
 			Exponent:         exponent,
 			BandsInterleave:  bandsInterleave,
 			Compression:      pb.ConsolidationParams_Compression(compression),

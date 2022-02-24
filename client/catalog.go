@@ -20,26 +20,86 @@ const (
 )
 
 type CubeHeader struct {
-	Count      int64
-	NbDatasets int64
+	Count         int64
+	NbDatasets    int64
+	RefDformat    *DataFormat
+	ResamplingAlg pb.Resampling
+	Geotransform  *pb.GeoTransform
+	Crs           string
+	Width, Height int32
 }
 
 type CubeElem struct {
-	Data    []byte
-	Shape   [3]int32
-	DType   pb.DataFormat_Dtype
-	Records []*Record
-	Err     string
+	Data         []byte
+	Shape        [3]int32
+	DType        pb.DataFormat_Dtype
+	Records      []*Record
+	DatasetsMeta *DatasetMeta
+	Err          string
 }
 
 type CubeIterator struct {
-	stream  pb.Geocube_GetCubeClient
+	stream  CubeStream
 	currval CubeElem
 	header  CubeHeader
 	err     error
 }
 
-func NewCubeIterator(stream pb.Geocube_GetCubeClient) (*CubeIterator, error) {
+type CubeStream interface {
+	Recv() (CubeResponse, error)
+}
+
+type CubeResponse interface {
+	GetGlobalHeader() *pb.GetCubeResponseHeader
+	GetHeader() *pb.ImageHeader
+	GetChunk() *pb.ImageChunk
+}
+
+type ClientStream struct{ pb.Geocube_GetCubeClient }
+
+func (s ClientStream) Recv() (CubeResponse, error) {
+	return s.Geocube_GetCubeClient.Recv()
+
+}
+
+type DownloaderStream struct {
+	pb.GeocubeDownloader_DownloadCubeClient
+}
+
+func (s DownloaderStream) Recv() (CubeResponse, error) {
+	return s.GeocubeDownloader_DownloadCubeClient.Recv()
+}
+
+type DatasetMeta struct {
+	Internals []*InternalMeta
+}
+
+func NewInternalMetaFromPb(prtb *pb.InternalMeta) *InternalMeta {
+	if prtb == nil {
+		panic("Proto message is empty")
+	}
+	return &InternalMeta{
+		ContainerURI:       prtb.GetContainerUri(),
+		ContainerSubDir:    prtb.GetContainerSubdir(),
+		Bands:              prtb.GetBands(),
+		InternalDataFormat: (*DataFormat)(prtb.GetDformat()),
+		ExternalMinValue:   prtb.GetRangeMin(),
+		ExternalMaxValue:   prtb.GetRangeMax(),
+		Exponent:           prtb.GetExponent(),
+	}
+}
+
+type InternalMeta struct {
+	ContainerURI       string
+	ContainerSubDir    string
+	Bands              []int64
+	InternalDataFormat *DataFormat
+	ExternalMinValue   float64
+	ExternalMaxValue   float64
+	Exponent           float64
+}
+
+func NewCubeIterator(stream CubeStream, width, height int32) (*CubeIterator, error) {
 	cit := CubeIterator{stream: stream}
 
 	// Get global header
@@ -54,12 +114,20 @@ func NewCubeIterator(stream pb.Geocube_GetCubeClient) (*CubeIterator, error) {
 	if header == nil {
 		return nil, fmt.Errorf("excepting a global header")
 	}
-	cit.header = CubeHeader{Count: header.Count, NbDatasets: header.NbDatasets}
-
+	cit.header = CubeHeader{
+		Count:         header.Count,
+		NbDatasets:    header.NbDatasets,
+		RefDformat:    (*DataFormat)(header.RefDformat),
+		ResamplingAlg: header.ResamplingAlg,
+		Geotransform:  header.Geotransform,
+		Crs:           header.Crs,
+		Width:         width,
+		Height:        height,
+	}
 	return &cit, nil
 }
 
-func (cit *CubeIterator) next() *pb.GetCubeResponse {
+func (cit *CubeIterator) next() CubeResponse {
 	resp, err := cit.stream.Recv()
 	if err != nil {
 		if err != io.EOF {
@@ -72,43 +140,47 @@ func (cit *CubeIterator) next() *pb.GetCubeResponse {
 
 // Next implements Iterator
 func (cit *CubeIterator) Next() bool {
-	var resp *pb.GetCubeResponse
+	var resp CubeResponse
 
 	// Get header
-	var nbParts int32
+	var header *pb.ImageHeader
 	var data bytes.Buffer
 	{
 		if resp = cit.next(); resp == nil {
 			return false
 		}
 		// Parse header
-		header := resp.GetHeader()
-		if header == nil {
+		if header = resp.GetHeader(); header == nil {
 			cit.err = errors.New("fatal: excepting a header")
 			return false
 		}
 
 		// Reset currval
-		cit.currval = CubeElem{Records: make([]*Record, len(header.GroupedRecords.Records))}
+		internals := make([]*InternalMeta, len(header.DatasetMeta.InternalsMeta))
+		cit.currval = CubeElem{
+			Records:      make([]*Record, len(header.GroupedRecords.Records)),
+			DatasetsMeta: &DatasetMeta{Internals: internals},
+		}
+
 		for i, r := range header.GroupedRecords.Records {
 			cit.currval.Records[i] = recordFromPb(r)
 		}
-
+		for i, d := range header.DatasetMeta.InternalsMeta {
+			cit.currval.DatasetsMeta.Internals[i] = NewInternalMetaFromPb(d)
+		}
 		if header.GetError() != "" {
 			cit.currval.Err = header.GetError()
 			return true
 		}
 
-		shape := header.GetShape()
-		nbParts = header.GetNbParts()
-		cit.currval.Shape = [3]int32{shape.GetDim1(), shape.GetDim2(), shape.GetDim3()}
+		cit.currval.Shape = [3]int32{header.Shape.Dim1, header.Shape.Dim2, header.Shape.Dim3}
 		cit.currval.DType = header.GetDtype()
 		data.Grow(int(header.GetSize()))
 		data.Write(header.GetData())
 	}
 
 	// Get chunks
-	for i := int32(1); i < nbParts; i++ {
+	for i := int32(1); i < header.NbParts; i++ {
 		if resp = cit.next(); resp == nil {
 			return false
 		}
@@ -122,17 +194,21 @@ func (cit *CubeIterator) Next() bool {
 		data.Write(chunk.GetData())
 	}
 
-	if nbParts > 0 {
-		inflater := flate.NewReader(&data)
-		var b bytes.Buffer
-		b.Grow(int(cit.currval.Shape[0]) * int(cit.currval.Shape[1]) * int(cit.currval.Shape[2]) * sizeOf(cit.currval.DType))
+	if header.NbParts > 0 {
+		if header.Compression {
+			inflater := flate.NewReader(&data)
+			var b bytes.Buffer
+			b.Grow(int(cit.currval.Shape[0]) * int(cit.currval.Shape[1]) * int(cit.currval.Shape[2]) * sizeOf(cit.currval.DType))
 
-		if _, err := io.Copy(&b, inflater); err != nil {
-			cit.currval.Err = err.Error()
-		} else if err := inflater.Close(); err != nil {
-			cit.currval.Err = err.Error()
+			if _, err := io.Copy(&b, inflater); err != nil {
+				cit.currval.Err = err.Error()
+			} else if err := inflater.Close(); err != nil {
+				cit.currval.Err = err.Error()
+			} else {
+				cit.currval.Data = b.Bytes()
+			}
 		} else {
-			cit.currval.Data = b.Bytes()
+			cit.currval.Data = data.Bytes()
 		}
 	}
 	return true
@@ -167,23 +243,35 @@ func (cit *CubeIterator) Err() error {
 	return cit.err
 }
 
-// GetCubeFromRecords gets a cube from a list of records
-func (c Client) GetCubeFromRecords(instancesID, recordsID []string, crs string, pix2crs [6]float64, sizeX, sizeY int64, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
-	stream, err := c.gcc.GetCube(c.ctx,
-		&pb.GetCubeRequest{
-			RecordsLister:    &pb.GetCubeRequest_Records{Records: &pb.RecordIdList{Ids: recordsID}},
-			InstancesId:      instancesID,
-			Crs:              crs,
-			PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},
-			Size:             &pb.Size{Width: int32(sizeX), Height: int32(sizeY)},
-			CompressionLevel: int32(compression),
-			HeadersOnly:      headersOnly,
-			Format:           pb.FileFormat(format),
-		})
+func (c Client) getCube(req *pb.GetCubeRequest) (*CubeIterator, error) {
+	if c.dlClient != nil && !req.HeadersOnly {
+		req.HeadersOnly = true
+		it, err := c.getCube(req)
+		if err != nil {
+			return nil, err
+		}
+		return c.dlClient.DownloadCube(it, Format(req.Format))
+	}
+
+	stream, err := c.gcc.GetCube(c.ctx, req)
 	if err != nil {
 		return nil, grpcError(err)
 	}
-	return NewCubeIterator(stream)
+	return NewCubeIterator(ClientStream{stream}, req.Size.Width, req.Size.Height)
+}
+
+// GetCubeFromRecords gets a cube from a list of records
+func (c Client) GetCubeFromRecords(instancesID, recordsID []string, crs string, pix2crs [6]float64, sizeX, sizeY int64, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
+	return c.getCube(&pb.GetCubeRequest{
+		RecordsLister:    &pb.GetCubeRequest_Records{Records: &pb.RecordIdList{Ids: recordsID}},
+		InstancesId:      instancesID,
+		Crs:              crs,
+		PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},
+		Size:             &pb.Size{Width: int32(sizeX), Height: int32(sizeY)},
+		CompressionLevel: int32(compression),
+		HeadersOnly:      headersOnly,
+		Format:           pb.FileFormat(format),
+	})
 }
 
 // GetCube gets a cube from a list of filters
@@ -197,21 +285,16 @@ func (c Client) GetCube(instancesID []string, tags map[string]string, fromTime, 
 		return nil, err
 	}
 
-	stream, err := c.gcc.GetCube(c.ctx,
-		&pb.GetCubeRequest{
-			RecordsLister:    &pb.GetCubeRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
-			InstancesId:      instancesID,
-			Crs:              crs,
-			PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},
-			Size:             &pb.Size{Width: int32(sizeX), Height: int32(sizeY)},
-			CompressionLevel: int32(compression),
-			HeadersOnly:      headersOnly,
-			Format:           pb.FileFormat(format),
-		})
-	if err != nil {
-		return nil, grpcError(err)
-	}
-	return NewCubeIterator(stream)
+	return c.getCube(&pb.GetCubeRequest{
+		RecordsLister:    &pb.GetCubeRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
+		InstancesId:      instancesID,
+		Crs:              crs,
+		PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},
+		Size:             &pb.Size{Width: int32(sizeX), Height: int32(sizeY)},
+		CompressionLevel: int32(compression),
+		HeadersOnly:      headersOnly,
+		Format:           pb.FileFormat(format),
+	})
 }
 
 func (c Client) GetCubeFromTile(instancesID []string, tags map[string]string, fromTime, toTime time.Time, tile *Tile, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
@@ -227,20 +310,59 @@ func (c Client) GetCubeFromTile(instancesID []string, tags map[string]string, fr
 		B: tile.Transform[1], C: tile.Transform[2],
 		D: tile.Transform[3], E: tile.Transform[4],
 		F: tile.Transform[5]}
-	size := pb.Size{Width: int32(tile.Width), Height: int32(tile.Height)}
-	stream, err := c.gcc.GetCube(c.ctx,
-		&pb.GetCubeRequest{
-			RecordsLister:    &pb.GetCubeRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
-			InstancesId:      instancesID,
-			Crs:              tile.CRS,
-			PixToCrs:         &geoTransform,
-			Size:             &size,
-			CompressionLevel: int32(compression),
-			HeadersOnly:      headersOnly,
-			Format:           pb.FileFormat(format),
+	size := pb.Size{Width: tile.Width, Height: tile.Height}
+	return c.getCube(&pb.GetCubeRequest{
+		RecordsLister:    &pb.GetCubeRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
+		InstancesId:      instancesID,
+		Crs:              tile.CRS,
+		PixToCrs:         &geoTransform,
+		Size:             &size,
+		CompressionLevel: int32(compression),
+		HeadersOnly:      headersOnly,
+		Format:           pb.FileFormat(format),
+	})
+}
+
+func (d DownloaderClient) DownloadCube(iter *CubeIterator, format Format) (*CubeIterator, error) {
+	var dsMeta []*pb.DatasetMeta
+	var groupedRecords []*pb.GroupedRecords
+	for iter.Next() {
+		headers := iter.Value()
+		internals := headers.DatasetsMeta.Internals
+		internalsMeta := make([]*pb.InternalMeta, len(internals))
+		for i, element := range internals {
+			m := pb.InternalMeta{
+				ContainerUri:    element.ContainerURI,
+				ContainerSubdir: element.ContainerSubDir,
+				Bands:           element.Bands,
+				Dformat:         (*pb.DataFormat)(element.InternalDataFormat),
+				RangeMin:        element.ExternalMinValue,
+				RangeMax:        element.ExternalMaxValue,
+				Exponent:        element.Exponent,
+			}
+			internalsMeta[i] = &m
+		}
+		records := make([]*pb.Record, len(headers.Records))
+		for i, element := range headers.Records {
+			r := element.ToPb()
+			records[i] = &r
+		}
+		groupedRecords = append(groupedRecords, &pb.GroupedRecords{Records: records})
+		dsMeta = append(dsMeta, &pb.DatasetMeta{InternalsMeta: internalsMeta})
+	}
+	stream, err := d.gdcc.DownloadCube(d.ctx,
+		&pb.GetCubeMetadataRequest{
+			DatasetsMeta:   dsMeta,
+			GroupedRecords: groupedRecords,
+			RefDformat:     (*pb.DataFormat)(iter.header.RefDformat),
+			ResamplingAlg:  iter.header.ResamplingAlg,
+			PixToCrs:       iter.header.Geotransform,
+			Crs:            iter.header.Crs,
+			Size:           &pb.Size{Width: iter.header.Width, Height: iter.header.Height},
+			Format:         pb.FileFormat(format),
 		})
 	if err != nil {
 		return nil, grpcError(err)
 	}
-	return NewCubeIterator(stream)
+	return NewCubeIterator(DownloaderStream{stream}, iter.header.Width, iter.header.Height)
 }

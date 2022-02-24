@@ -21,11 +21,21 @@ var client gcclient.Client
 
 func setupConnection(ctx context.Context, c *cli.Context, verbose bool) error {
 	var err error
-	var creds credentials.TransportCredentials
-	if !c.Bool("insecure") {
-		creds = credentials.NewTLS(&tls.Config{})
+	connector := gcclient.ClientConnector{
+		Connector: gcclient.Connector{
+			Ctx:    ctx,
+			Server: c.String("srv"),
+			ApiKey: c.String("apikey"),
+		},
 	}
-	client, err = gcclient.Dial(ctx, c.String("srv"), creds, c.String("apikey"))
+	if !c.Bool("insecure") {
+		connector.Creds = credentials.NewTLS(&tls.Config{})
+	}
+	if dlserver := c.String("downloader"); dlserver != "" {
+		connector.DownloaderConnector = &gcclient.DownloaderConnector{Ctx: ctx, Server: dlserver}
+	}
+
+	client, err = connector.Dial()
 	if err != nil {
 		return err
 	}
@@ -59,6 +69,10 @@ func main() {
 		cli.BoolFlag{
 			Name:  "insecure",
 			Usage: "allow insecure grpc",
+		},
+		cli.StringFlag{
+			Name:  "downloader",
+			Usage: "address of a local downloader service (e.g. 127.0.0.1:8081)",
 		},
 	}
 	app.Version = "0.2.0"
@@ -723,7 +737,7 @@ func cliGetCube(c *cli.Context) {
 }
 
 func cliCreateVariable(c *cli.Context) {
-	dformat, err := gcclient.ToPbDFormat(c.String("dformat"))
+	dformat, err := gcclient.ToDFormat(c.String("dformat"))
 	if err != nil {
 		log.Fatalf("Parse dformat: %v", err)
 	}
@@ -857,7 +871,7 @@ func cliCreatePalette(c *cli.Context) {
 }
 
 func cliIndexDataset(c *cli.Context) {
-	dformat, err := gcclient.ToPbDFormat(c.String("dformat"))
+	dformat, err := gcclient.ToDFormat(c.String("dformat"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -880,7 +894,7 @@ func cliIndexDataset(c *cli.Context) {
 }
 
 func cliConfigConsolidation(c *cli.Context) {
-	dformat, err := gcclient.ToPbDFormat(c.String("dformat"))
+	dformat, err := gcclient.ToDFormat(c.String("dformat"))
 	if err != nil {
 		log.Fatal(err)
 	}

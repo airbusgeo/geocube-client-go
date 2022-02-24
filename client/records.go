@@ -54,6 +54,18 @@ func (r *Record) ToString() string {
 	return s
 }
 
+func (r *Record) ToPb() pb.Record {
+	t := timestamppb.New(r.Time)
+	return pb.Record{
+		Id:    r.ID,
+		Name:  r.Name,
+		Time:  t,
+		Tags:  map[string]string{},
+		AoiId: r.AOIID,
+		Aoi:   &pb.AOI{},
+	}
+}
+
 // CreateAOI creates an aoi from a geometry
 // If error EntityAlreadyExists, returns the id of the existing one and the error.
 func (c Client) CreateAOI(g AOI) (string, error) {

@@ -13,6 +13,8 @@ import (
 
 type ColorPoint pb.ColorPoint
 
+type DataFormat pb.DataFormat
+
 type Variable struct {
 	client *Client
 	pb.Variable
@@ -149,11 +151,11 @@ func (v *Variable) instanceFromID(id string) *VariableInstance {
 	return nil
 }
 
-// ToPbDFormat returns a DataFormat from the user-defined string
+// ToDFormat returns a DataFormat from the user-defined string
 // Format is "datatype,nodata,min,max"
 // with datatype in {"byte, uint8, uint16, uint32, int8,int16, int32, float32, float64, complex64, auto, u1, u2, u4, i1, i2, i4, f4, f8, c8"}
 // with nodata, min and max as float value
-func ToPbDFormat(s string) (*pb.DataFormat, error) {
+func ToDFormat(s string) (*DataFormat, error) {
 	ss := strings.Split(s, ",")
 	if len(ss) != 4 {
 		return nil, errors.New("wrong format for dformat")
@@ -193,7 +195,7 @@ func ToPbDFormat(s string) (*pb.DataFormat, error) {
 		return nil, err
 	}
 
-	return &pb.DataFormat{
+	return &DataFormat{
 		Dtype:    dtype,
 		NoData:   nodata,
 		MinValue: minValue,
@@ -209,14 +211,14 @@ func toResampling(s string) pb.Resampling {
 }
 
 // CreateVariable creates a variable
-func (c Client) CreateVariable(name, unit, description string, dformat *pb.DataFormat, bandsName []string, palette, resamplingAlg string) (string, error) {
+func (c Client) CreateVariable(name, unit, description string, dformat *DataFormat, bandsName []string, palette, resamplingAlg string) (string, error) {
 	resp, err := c.gcc.CreateVariable(c.ctx,
 		&pb.CreateVariableRequest{
 			Variable: &pb.Variable{
 				Name:          name,
 				Unit:          unit,
 				Description:   description,
-				Dformat:       dformat,
+				Dformat:       (*pb.DataFormat)(dformat),
 				Bands:         bandsName,
 				Palette:       palette,
 				ResamplingAlg: toResampling(resamplingAlg),
