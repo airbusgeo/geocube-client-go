@@ -14,7 +14,16 @@ import (
 
 type ColorPoint pb.ColorPoint
 
-type DataFormat pb.DataFormat
+type DataType struct {
+	pb.DataFormat_Dtype
+}
+
+type DataFormat struct {
+	Dtype    DataType
+	NoData   float64
+	MinValue float64
+	MaxValue float64
+}
 
 type Variable struct {
 	client *Client
@@ -26,6 +35,24 @@ type VariableInstance struct {
 	InstanceID       string
 	InstanceName     string
 	InstanceMetadata map[string]string
+}
+
+func (df *DataFormat) toPb() *pb.DataFormat {
+	return &pb.DataFormat{
+		Dtype:    df.Dtype.DataFormat_Dtype,
+		NoData:   df.NoData,
+		MinValue: df.MinValue,
+		MaxValue: df.MaxValue,
+	}
+}
+
+func NewDataFormatFromPb(df *pb.DataFormat) *DataFormat {
+	return &DataFormat{
+		Dtype:    DataType{df.Dtype},
+		NoData:   df.NoData,
+		MinValue: df.MinValue,
+		MaxValue: df.MaxValue,
+	}
 }
 
 // Instance returns a VariableInstance or nil if the instance does not exist
@@ -152,17 +179,9 @@ func (v *Variable) instanceFromID(id string) *VariableInstance {
 	return nil
 }
 
-// ToDFormat returns a DataFormat from the user-defined string
-// Format is "datatype,nodata,min,max"
-// with datatype in {"byte, uint8, uint16, uint32, int8,int16, int32, float32, float64, complex64, auto, u1, u2, u4, i1, i2, i4, f4, f8, c8"}
-// with nodata, min and max as float value
-func ToDFormat(s string) (*DataFormat, error) {
-	ss := strings.Split(s, ",")
-	if len(ss) != 4 {
-		return nil, errors.New("wrong format for dformat")
-	}
+func ToDType(s string) (DataType, error) {
 	var dtype pb.DataFormat_Dtype
-	switch strings.ToLower(ss[0]) {
+	switch strings.ToLower(s) {
 	case "uint8", "u1", "byte":
 		dtype = pb.DataFormat_UInt8
 	case "uint16", "u2":
@@ -182,10 +201,26 @@ func ToDFormat(s string) (*DataFormat, error) {
 	case "auto":
 		dtype = pb.DataFormat_UNDEFINED
 	default:
-		return nil, errors.New("unrecognized DataType")
+		return DataType{dtype}, errors.New("unrecognized DataType")
+	}
+	return DataType{dtype}, nil
+}
+
+// ToDFormat returns a DataFormat from the user-defined string
+// Format is "datatype,nodata,min,max"
+// with datatype in {"byte, uint8, uint16, uint32, int8,int16, int32, float32, float64, complex64, auto, u1, u2, u4, i1, i2, i4, f4, f8, c8"}
+// with nodata, min and max as float value
+func ToDFormat(s string) (*DataFormat, error) {
+	ss := strings.Split(s, ",")
+	if len(ss) != 4 {
+		return nil, errors.New("wrong format for dformat")
+	}
+	var err error
+	dtype, err := ToDType(ss[0])
+	if err != nil {
+		return nil, err
 	}
 	var nodata, minValue, maxValue float64
-	var err error
 	if nodata, err = strconv.ParseFloat(strings.Trim(ss[1], " "), 64); err != nil {
 		return nil, err
 	}
@@ -219,7 +254,7 @@ func (c Client) CreateVariable(ctx context.Context, name, unit, description stri
 				Name:          name,
 				Unit:          unit,
 				Description:   description,
-				Dformat:       (*pb.DataFormat)(dformat),
+				Dformat:       dformat.toPb(),
 				Bands:         bandsName,
 				Palette:       palette,
 				ResamplingAlg: toResampling(resamplingAlg),

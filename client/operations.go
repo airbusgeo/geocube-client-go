@@ -22,7 +22,7 @@ func (c Client) IndexDataset(ctx context.Context, uri string, managed bool, cont
 		InstanceId:      instanceID,
 		ContainerSubdir: containerSubdir,
 		Bands:           bands,
-		Dformat:         (*pb.DataFormat)(dformat),
+		Dformat:         dformat.toPb(),
 		RealMinValue:    realMin,
 		RealMaxValue:    realMax,
 		Exponent:        exponent,
@@ -59,7 +59,7 @@ func (c Client) ConfigConsolidation(ctx context.Context, variableID string, dfor
 	_, err := c.gcc.ConfigConsolidation(ctx, &pb.ConfigConsolidationRequest{
 		VariableId: variableID,
 		ConsolidationParams: &pb.ConsolidationParams{
-			Dformat:       (*pb.DataFormat)(dformat),
+			Dformat:       dformat.toPb(),
 			Exponent:      exponent,
 			Compression:   pb.ConsolidationParams_Compression(compression),
 			ResamplingAlg: toResampling(resamplingAlg),
