@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -65,8 +66,8 @@ func NewRegularLayout(name, crs string, resolution float64, sizeXPx, sizeYPx, or
 	}
 }
 
-func (c Client) CreateLayout(name string, gridFlags []string, gridParameters map[string]string, blockXSize, blockYSize, maxRecords int64) error {
-	if _, err := c.gcc.CreateLayout(c.ctx,
+func (c Client) CreateLayout(ctx context.Context, name string, gridFlags []string, gridParameters map[string]string, blockXSize, blockYSize, maxRecords int64) error {
+	if _, err := c.gcc.CreateLayout(ctx,
 		&pb.CreateLayoutRequest{Layout: &pb.Layout{
 			Name:           name,
 			GridFlags:      gridFlags,
@@ -80,8 +81,8 @@ func (c Client) CreateLayout(name string, gridFlags []string, gridParameters map
 	return nil
 }
 
-func (c Client) ListLayouts(nameLike string) ([]*Layout, error) {
-	resp, err := c.gcc.ListLayouts(c.ctx, &pb.ListLayoutsRequest{NameLike: nameLike})
+func (c Client) ListLayouts(ctx context.Context, nameLike string) ([]*Layout, error) {
+	resp, err := c.gcc.ListLayouts(ctx, &pb.ListLayoutsRequest{NameLike: nameLike})
 
 	if err != nil {
 		return nil, grpcError(err)
@@ -95,7 +96,7 @@ func (c Client) ListLayouts(nameLike string) ([]*Layout, error) {
 	return layouts, nil
 }
 
-func (c Client) TileAOI(aoi AOI, layoutName string, layout *Layout) (<-chan Tile, error) {
+func (c Client) TileAOI(ctx context.Context, aoi AOI, layoutName string, layout *Layout) (<-chan Tile, error) {
 	req := &pb.TileAOIRequest{Aoi: pbFromAOI(aoi)}
 	if layout != nil {
 		req.Identifier = &pb.TileAOIRequest_Layout{Layout: (*pb.Layout)(layout)}
@@ -105,7 +106,7 @@ func (c Client) TileAOI(aoi AOI, layoutName string, layout *Layout) (<-chan Tile
 		return nil, fmt.Errorf("TileAOI: either layoutName or layout must be specified")
 	}
 
-	stream, err := c.gcc.TileAOI(c.ctx, req)
+	stream, err := c.gcc.TileAOI(ctx, req)
 	if err != nil {
 		return nil, grpcError(err)
 	}

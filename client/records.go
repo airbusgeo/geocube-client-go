@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"time"
@@ -68,8 +69,8 @@ func (r *Record) ToPb() pb.Record {
 
 // CreateAOI creates an aoi from a geometry
 // If error EntityAlreadyExists, returns the id of the existing one and the error.
-func (c Client) CreateAOI(g AOI) (string, error) {
-	resp, err := c.gcc.CreateAOI(c.ctx, &pb.CreateAOIRequest{Aoi: pbFromAOI(g)})
+func (c Client) CreateAOI(ctx context.Context, g AOI) (string, error) {
+	resp, err := c.gcc.CreateAOI(ctx, &pb.CreateAOIRequest{Aoi: pbFromAOI(g)})
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.AlreadyExists {
 			for _, detail := range s.Details() {
@@ -85,8 +86,8 @@ func (c Client) CreateAOI(g AOI) (string, error) {
 }
 
 // GetAOI retrieves an AOI from a aoi_id
-func (c Client) GetAOI(aoiID string) (AOI, error) {
-	resp, err := c.gcc.GetAOI(c.ctx, &pb.GetAOIRequest{Id: aoiID})
+func (c Client) GetAOI(ctx context.Context, aoiID string) (AOI, error) {
+	resp, err := c.gcc.GetAOI(ctx, &pb.GetAOIRequest{Id: aoiID})
 	if err != nil {
 		return AOI{}, grpcError(err)
 	}
@@ -94,7 +95,7 @@ func (c Client) GetAOI(aoiID string) (AOI, error) {
 }
 
 // CreateRecord creates a record with an aoi, a name and a date
-func (c Client) CreateRecord(name, aoiID string, date time.Time, tags map[string]string) ([]string, error) {
+func (c Client) CreateRecord(ctx context.Context, name, aoiID string, date time.Time, tags map[string]string) ([]string, error) {
 	ts := timestamppb.New(date)
 	if err := ts.CheckValid(); err != nil {
 		return nil, err
@@ -105,7 +106,7 @@ func (c Client) CreateRecord(name, aoiID string, date time.Time, tags map[string
 		Tags:  tags,
 		AoiId: aoiID}
 
-	resp, err := c.gcc.CreateRecords(c.ctx, &pb.CreateRecordsRequest{Records: []*pb.NewRecord{record}})
+	resp, err := c.gcc.CreateRecords(ctx, &pb.CreateRecordsRequest{Records: []*pb.NewRecord{record}})
 	if err != nil {
 		return nil, grpcError(err)
 	}
@@ -113,7 +114,7 @@ func (c Client) CreateRecord(name, aoiID string, date time.Time, tags map[string
 }
 
 // CreateRecords creates a batch of records with aois, names and dates
-func (c Client) CreateRecords(names, aoiIDs []string, dates []time.Time, tags []map[string]string) ([]string, error) {
+func (c Client) CreateRecords(ctx context.Context, names, aoiIDs []string, dates []time.Time, tags []map[string]string) ([]string, error) {
 	if len(names) != len(aoiIDs) || len(names) != len(dates) || len(names) != len(tags) {
 		return nil, fmt.Errorf("CreateRecords: all parameters must be the same length")
 	}
@@ -131,7 +132,7 @@ func (c Client) CreateRecords(names, aoiIDs []string, dates []time.Time, tags []
 			AoiId: aoiIDs[i]}
 	}
 
-	resp, err := c.gcc.CreateRecords(c.ctx, &pb.CreateRecordsRequest{Records: records})
+	resp, err := c.gcc.CreateRecords(ctx, &pb.CreateRecordsRequest{Records: records})
 	if err != nil {
 		return nil, grpcError(err)
 	}
@@ -140,8 +141,8 @@ func (c Client) CreateRecords(names, aoiIDs []string, dates []time.Time, tags []
 
 // DeleteRecords deletes a batch of records iif no dataset has reference on
 // Returns the number of deleted records
-func (c Client) DeleteRecords(ids []string) (int64, error) {
-	resp, err := c.gcc.DeleteRecords(c.ctx, &pb.DeleteRecordsRequest{Ids: ids})
+func (c Client) DeleteRecords(ctx context.Context, ids []string) (int64, error) {
+	resp, err := c.gcc.DeleteRecords(ctx, &pb.DeleteRecordsRequest{Ids: ids})
 	if err != nil {
 		return 0, grpcError(err)
 	}
@@ -150,8 +151,8 @@ func (c Client) DeleteRecords(ids []string) (int64, error) {
 
 // AddRecordsTags add or update existing tag form list of records
 // returns the number of updated records
-func (c Client) AddRecordsTags(ids []string, tags map[string]string) (int64, error) {
-	resp, err := c.gcc.AddRecordsTags(c.ctx, &pb.AddRecordsTagsRequest{
+func (c Client) AddRecordsTags(ctx context.Context, ids []string, tags map[string]string) (int64, error) {
+	resp, err := c.gcc.AddRecordsTags(ctx, &pb.AddRecordsTagsRequest{
 		Ids:  ids,
 		Tags: tags,
 	})
@@ -163,8 +164,8 @@ func (c Client) AddRecordsTags(ids []string, tags map[string]string) (int64, err
 
 // AddRecordsTags delete tags from list of records
 // returns the number of updated records
-func (c Client) RemoveRecordsTags(ids []string, tags []string) (int64, error) {
-	resp, err := c.gcc.RemoveRecordsTags(c.ctx, &pb.RemoveRecordsTagsRequest{
+func (c Client) RemoveRecordsTags(ctx context.Context, ids []string, tags []string) (int64, error) {
+	resp, err := c.gcc.RemoveRecordsTags(ctx, &pb.RemoveRecordsTagsRequest{
 		Ids:     ids,
 		TagsKey: tags,
 	})
@@ -174,7 +175,7 @@ func (c Client) RemoveRecordsTags(ids []string, tags []string) (int64, error) {
 	return resp.Nb, nil
 }
 
-func (c Client) streamListRecords(name string, tags map[string]string, aoi AOI, fromTime, toTime time.Time, limit, page int, returnAOI bool) (pb.Geocube_ListRecordsClient, error) {
+func (c Client) streamListRecords(ctx context.Context, name string, tags map[string]string, aoi AOI, fromTime, toTime time.Time, limit, page int, returnAOI bool) (pb.Geocube_ListRecordsClient, error) {
 
 	fromTs := timestamppb.New(fromTime)
 	if err := fromTs.CheckValid(); err != nil {
@@ -185,7 +186,7 @@ func (c Client) streamListRecords(name string, tags map[string]string, aoi AOI, 
 		return nil, err
 	}
 
-	res, err := c.gcc.ListRecords(c.ctx, &pb.ListRecordsRequest{
+	res, err := c.gcc.ListRecords(ctx, &pb.ListRecordsRequest{
 		Name:     name,
 		Tags:     tags,
 		Aoi:      pbFromAOI(aoi),
@@ -199,8 +200,8 @@ func (c Client) streamListRecords(name string, tags map[string]string, aoi AOI, 
 }
 
 // ListRecords lists records that fit the search parameters (all are optionnal)
-func (c Client) ListRecords(name string, tags map[string]string, aoi AOI, fromTime, toTime time.Time, limit, page int, returnAOI bool) ([]*Record, error) {
-	streamrecords, err := c.streamListRecords(name, tags, aoi, fromTime, toTime, limit, page, returnAOI)
+func (c Client) ListRecords(ctx context.Context, name string, tags map[string]string, aoi AOI, fromTime, toTime time.Time, limit, page int, returnAOI bool) ([]*Record, error) {
+	streamrecords, err := c.streamListRecords(ctx, name, tags, aoi, fromTime, toTime, limit, page, returnAOI)
 	if err != nil {
 		return nil, err
 	}

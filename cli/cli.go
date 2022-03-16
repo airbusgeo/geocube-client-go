@@ -23,7 +23,6 @@ func setupConnection(ctx context.Context, c *cli.Context, verbose bool) error {
 	var err error
 	connector := gcclient.ClientConnector{
 		Connector: gcclient.Connector{
-			Ctx:    ctx,
 			Server: c.String("srv"),
 			ApiKey: c.String("apikey"),
 		},
@@ -32,7 +31,7 @@ func setupConnection(ctx context.Context, c *cli.Context, verbose bool) error {
 		connector.Creds = credentials.NewTLS(&tls.Config{})
 	}
 	if dlserver := c.String("downloader"); dlserver != "" {
-		connector.DownloaderConnector = &gcclient.DownloaderConnector{Ctx: ctx, Server: dlserver}
+		connector.DownloaderConnector = &gcclient.DownloaderConnector{Server: dlserver}
 	}
 
 	client, err = connector.Dial()
@@ -481,7 +480,7 @@ func cliListRecords(c *cli.Context) {
 		}
 	}
 
-	records, err := client.ListRecords(c.String("name-like"), mustParseDict(c.StringSlice("tag")), aoi, fromT, toT, c.Int("limit"), c.Int("page"), c.Bool("with-aoi"))
+	records, err := client.ListRecords(context.Background(), c.String("name-like"), mustParseDict(c.StringSlice("tag")), aoi, fromT, toT, c.Int("limit"), c.Int("page"), c.Bool("with-aoi"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -511,7 +510,7 @@ func cliListRecords(c *cli.Context) {
 }
 
 func cliAddRecordsTags(c *cli.Context) {
-	recordsUpdated, err := client.AddRecordsTags(c.StringSlice("records-id"), mustParseDict(c.StringSlice("tag")))
+	recordsUpdated, err := client.AddRecordsTags(context.Background(), c.StringSlice("records-id"), mustParseDict(c.StringSlice("tag")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -519,7 +518,7 @@ func cliAddRecordsTags(c *cli.Context) {
 }
 
 func cliRemoveRecordsTags(c *cli.Context) {
-	recordsUpdated, err := client.RemoveRecordsTags(c.StringSlice("records-id"), c.StringSlice("tags"))
+	recordsUpdated, err := client.RemoveRecordsTags(context.Background(), c.StringSlice("records-id"), c.StringSlice("tags"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -531,7 +530,7 @@ func cliCreateAOI(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	id, err := client.CreateAOI(aoi)
+	id, err := client.CreateAOI(context.Background(), aoi)
 	if id == "" {
 		log.Fatal(err)
 	}
@@ -541,7 +540,7 @@ func cliCreateAOI(c *cli.Context) {
 
 func cliGetAOI(c *cli.Context) {
 	aoiID := c.String("id")
-	aoi, err := client.GetAOI(aoiID)
+	aoi, err := client.GetAOI(context.Background(), aoiID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -566,14 +565,14 @@ func cliCreateRecord(c *cli.Context) {
 		if err != nil {
 			log.Fatalf("Unable to create aoi from file %s: %v", c.String("aoi-path"), err)
 		}
-		id, err := client.CreateAOI(g)
+		id, err := client.CreateAOI(context.Background(), g)
 		if id == "" {
 			log.Fatalf("Unable to create aoi: %v", err)
 		}
 		aoiID = id
 	}
 
-	id, err := client.CreateRecord(c.String("name"), aoiID, t, mustParseDict(c.StringSlice("tag")))
+	id, err := client.CreateRecord(context.Background(), c.String("name"), aoiID, t, mustParseDict(c.StringSlice("tag")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -582,7 +581,7 @@ func cliCreateRecord(c *cli.Context) {
 }
 
 func cliDeleteRecord(c *cli.Context) {
-	nb, err := client.DeleteRecords(c.StringSlice("id"))
+	nb, err := client.DeleteRecords(context.Background(), c.StringSlice("id"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -609,13 +608,13 @@ func cliCreateLayout(c *cli.Context) {
 		}
 	}
 
-	if err := client.CreateLayout(c.String("name"), gridFlags, gridParameters, c.Int64("block-size"), c.Int64("block-size"), c.Int64("max-records")); err != nil {
+	if err := client.CreateLayout(context.Background(), c.String("name"), gridFlags, gridParameters, c.Int64("block-size"), c.Int64("block-size"), c.Int64("max-records")); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func cliListLayouts(c *cli.Context) {
-	layouts, err := client.ListLayouts(c.String("name-like"))
+	layouts, err := client.ListLayouts(context.Background(), c.String("name-like"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -632,10 +631,10 @@ func cliTileAOI(c *cli.Context) {
 
 	var tiles <-chan gcclient.Tile
 	if c.String("layout") != "" {
-		tiles, err = client.TileAOI(aoi, c.String("layout"), nil)
+		tiles, err = client.TileAOI(context.Background(), aoi, c.String("layout"), nil)
 	} else {
 		layout := gcclient.NewRegularLayout("", c.String("crs"), c.Float64("resolution"), c.Int64("size-x"), c.Int64("size-y"), 0, 0, -1, -1, -1)
-		tiles, err = client.TileAOI(aoi, "", &layout)
+		tiles, err = client.TileAOI(context.Background(), aoi, "", &layout)
 	}
 
 	if err != nil {
@@ -680,7 +679,7 @@ func cliGetCube(c *cli.Context) {
 
 	if c.IsSet("records-id") {
 		recordsID := toSlice(c.String("records-id"), ",")
-		cubeit, err = client.GetCubeFromRecords(instancesID, recordsID, c.String("crs"), p2c, c.Int64("size-x"), c.Int64("size-y"), outputFormat, c.Int("compression"), headersOnly)
+		cubeit, err = client.GetCubeFromRecords(context.Background(), instancesID, recordsID, c.String("crs"), p2c, c.Int64("size-x"), c.Int64("size-y"), outputFormat, c.Int("compression"), headersOnly)
 
 	} else {
 		var fromT, toT time.Time
@@ -691,7 +690,7 @@ func cliGetCube(c *cli.Context) {
 			toT = mustParseTime(c.String("to-time"))
 		}
 		tags := mustParseDict(c.StringSlice("tag"))
-		cubeit, err = client.GetCube(instancesID, tags, fromT, toT, c.String("crs"), p2c, c.Int64("size-x"), c.Int64("size-y"), outputFormat, c.Int("compression"), headersOnly)
+		cubeit, err = client.GetCube(context.Background(), instancesID, tags, fromT, toT, c.String("crs"), p2c, c.Int64("size-x"), c.Int64("size-y"), outputFormat, c.Int("compression"), headersOnly)
 	}
 
 	if err != nil {
@@ -741,7 +740,7 @@ func cliCreateVariable(c *cli.Context) {
 	if err != nil {
 		log.Fatalf("Parse dformat: %v", err)
 	}
-	id, err := client.CreateVariable(
+	id, err := client.CreateVariable(context.Background(),
 		c.String("name"), c.String("unit"), c.String("description"),
 		dformat, strings.Split(c.String("bands"), ","),
 		c.String("palette"), c.String("resampling-alg"))
@@ -753,7 +752,7 @@ func cliCreateVariable(c *cli.Context) {
 }
 
 func cliInstantiateVariable(c *cli.Context) {
-	id, err := client.InstantiateVariable(c.String("id"), c.String("name"), mustParseDict(c.StringSlice("metadata")))
+	id, err := client.InstantiateVariable(context.Background(), c.String("id"), c.String("name"), mustParseDict(c.StringSlice("metadata")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -763,19 +762,19 @@ func cliInstantiateVariable(c *cli.Context) {
 
 func cliGetVariable(c *cli.Context) {
 	if c.IsSet("id") {
-		variable, err := client.GetVariable(c.String("id"))
+		variable, err := client.GetVariable(context.Background(), c.String("id"))
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Print(variable.ToString())
 	} else if c.IsSet("instance-id") {
-		variable, err := client.GetVariableFromInstanceID(c.String("instance-id"))
+		variable, err := client.GetVariableFromInstanceID(context.Background(), c.String("instance-id"))
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Print(variable.ToString())
 	} else if c.IsSet("name") {
-		variable, err := client.GetVariableFromName(c.String("name"))
+		variable, err := client.GetVariableFromName(context.Background(), c.String("name"))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -787,7 +786,7 @@ func cliGetVariable(c *cli.Context) {
 }
 
 func cliListVariables(c *cli.Context) {
-	variables, err := client.ListVariables(c.String("name-like"), c.Int("limit"), c.Int("page"))
+	variables, err := client.ListVariables(context.Background(), c.String("name-like"), c.Int("limit"), c.Int("page"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -805,14 +804,14 @@ func getIfSet(c *cli.Context, key string) *string {
 }
 
 func cliUpdateVariable(c *cli.Context) {
-	if err := client.UpdateVariable(c.String("id"), getIfSet(c, "name"), getIfSet(c, "unit"), getIfSet(c, "description"),
+	if err := client.UpdateVariable(context.Background(), c.String("id"), getIfSet(c, "name"), getIfSet(c, "unit"), getIfSet(c, "description"),
 		getIfSet(c, "palette"), getIfSet(c, "resamplingAlg")); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func cliUpdateInstance(c *cli.Context) {
-	if err := client.UpdateInstance(c.String("id"), getIfSet(c, "name"), mustParseDict(c.StringSlice("metadata")), c.StringSlice("rem-key")); err != nil {
+	if err := client.UpdateInstance(context.Background(), c.String("id"), getIfSet(c, "name"), mustParseDict(c.StringSlice("metadata")), c.StringSlice("rem-key")); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -820,24 +819,24 @@ func cliUpdateInstance(c *cli.Context) {
 func cliDeleteVariable(c *cli.Context) {
 	id := c.String("id")
 	if c.Bool("all") {
-		variable, err := client.GetVariable(id)
+		variable, err := client.GetVariable(context.Background(), id)
 		if err != nil {
 			log.Fatal(err)
 		}
 		for _, instance := range variable.Instances {
-			if err = client.DeleteInstance(instance.Id); err != nil {
+			if err = client.DeleteInstance(context.Background(), instance.Id); err != nil {
 				log.Fatal(err)
 			}
 		}
 	}
-	if err := client.DeleteVariable(id); err != nil {
+	if err := client.DeleteVariable(context.Background(), id); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func cliDeleteInstance(c *cli.Context) {
 	id := c.String("id")
-	if err := client.DeleteInstance(id); err != nil {
+	if err := client.DeleteInstance(context.Background(), id); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -865,7 +864,7 @@ func cliCreatePalette(c *cli.Context) {
 
 	}
 
-	if err := client.CreatePalette(c.String("name"), colors, c.Bool("replace")); err != nil {
+	if err := client.CreatePalette(context.Background(), c.String("name"), colors, c.Bool("replace")); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -885,7 +884,7 @@ func cliIndexDataset(c *cli.Context) {
 		}
 	}
 
-	err = client.IndexDataset(c.String("uri"), c.Bool("managed"), c.String("subdir"), c.String("record-id"),
+	err = client.IndexDataset(context.Background(), c.String("uri"), c.Bool("managed"), c.String("subdir"), c.String("record-id"),
 		c.String("instance-id"), bands, dformat, c.Float64("real-min"), c.Float64("real-max"), c.Float64("exponent"))
 
 	if err != nil {
@@ -898,7 +897,7 @@ func cliConfigConsolidation(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = client.ConfigConsolidation(c.String("variable-id"), dformat, c.Float64("exponent"), c.Bool("bands-interleave"), c.Int("compression"), c.Int("overviews"), c.String("resampling-alg"), c.Int("storage-class"))
+	err = client.ConfigConsolidation(context.Background(), c.String("variable-id"), dformat, c.Float64("exponent"), c.Bool("bands-interleave"), c.Int("compression"), c.Int("overviews"), c.String("resampling-alg"), c.Int("storage-class"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -908,7 +907,7 @@ func cliConfigConsolidation(c *cli.Context) {
 func waitJob(id string) {
 	lastState := ""
 	for {
-		job, err := client.GetJob(id)
+		job, err := client.GetJob(context.Background(), id)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -928,7 +927,7 @@ func cliConsolidateDatasets(c *cli.Context) {
 	var id string
 	var err error
 	if c.IsSet("records-id") {
-		id, err = client.ConsolidateDatasetsFromRecords(c.String("name"), c.String("instance-id"), c.String("layout"), toSlice(c.String("records-id"), ","))
+		id, err = client.ConsolidateDatasetsFromRecords(context.Background(), c.String("name"), c.String("instance-id"), c.String("layout"), toSlice(c.String("records-id"), ","))
 	} else {
 		var fromT, toT time.Time
 		if c.IsSet("from-time") {
@@ -938,7 +937,7 @@ func cliConsolidateDatasets(c *cli.Context) {
 			toT = mustParseTime(c.String("to-time"))
 		}
 		tags := mustParseDict(c.StringSlice("tag"))
-		id, err = client.ConsolidateDatasetsFromFilters(c.String("name"), c.String("instance-id"), c.String("layout"), tags, fromT, toT)
+		id, err = client.ConsolidateDatasetsFromFilters(context.Background(), c.String("name"), c.String("instance-id"), c.String("layout"), tags, fromT, toT)
 	}
 
 	if err != nil {
@@ -953,7 +952,7 @@ func cliConsolidateDatasets(c *cli.Context) {
 }
 
 func cliGetJob(c *cli.Context) {
-	j, err := client.GetJob(c.String("id"))
+	j, err := client.GetJob(context.Background(), c.String("id"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -961,7 +960,7 @@ func cliGetJob(c *cli.Context) {
 }
 
 func cliListJobs(c *cli.Context) {
-	jobs, err := client.ListJobs(c.String("name-like"))
+	jobs, err := client.ListJobs(context.Background(), c.String("name-like"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -972,7 +971,7 @@ func cliListJobs(c *cli.Context) {
 
 func cliRetryJob(c *cli.Context) {
 	id := c.String("id")
-	if err := client.RetryJob(id, c.Bool("force-any-state")); err != nil {
+	if err := client.RetryJob(context.Background(), id, c.Bool("force-any-state")); err != nil {
 		log.Fatal(err)
 	}
 
@@ -983,7 +982,7 @@ func cliRetryJob(c *cli.Context) {
 
 func cliCancelJob(c *cli.Context) {
 	id := c.String("id")
-	if err := client.CancelJob(id); err != nil {
+	if err := client.CancelJob(context.Background(), id); err != nil {
 		log.Fatal(err)
 	}
 
@@ -993,7 +992,7 @@ func cliCancelJob(c *cli.Context) {
 }
 
 func cliCleanJobs(c *cli.Context) {
-	nb, err := client.CleanJobs(c.String("name-like"), c.String("state"))
+	nb, err := client.CleanJobs(context.Background(), c.String("name-like"), c.String("state"))
 	if err != nil {
 		log.Fatal(err)
 	}

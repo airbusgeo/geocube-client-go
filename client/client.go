@@ -10,13 +10,11 @@ import (
 )
 
 type DownloaderClient struct {
-	ctx  context.Context
 	gdcc pb.GeocubeDownloaderClient
 }
 
 type Client struct {
 	gcc      pb.GeocubeClient
-	ctx      context.Context
 	dlClient *DownloaderClient
 }
 
@@ -25,7 +23,6 @@ func (clt *Client) GetDownloaderClient() DownloaderClient {
 }
 
 type Connector struct {
-	Ctx    context.Context
 	Server string
 	Creds  credentials.TransportCredentials
 	ApiKey string
@@ -66,9 +63,6 @@ func (c Connector) connect() (*grpc.ClientConn, error) {
 
 // Dial creates a new client connected to the server
 func (c *ClientConnector) Dial() (Client, error) {
-	if c.Ctx == nil {
-		return Client{}, fmt.Errorf("clientConnector.Dial: nil context")
-	}
 	grpconn, err := c.connect()
 	if err != nil {
 		return Client{}, fmt.Errorf("Dial: %w", err)
@@ -83,22 +77,17 @@ func (c *ClientConnector) Dial() (Client, error) {
 	}
 	return Client{
 		gcc:      pb.NewGeocubeClient(grpconn),
-		ctx:      c.Ctx,
 		dlClient: dlClient,
 	}, nil
 }
 
 // Dial creates a new downloader client connected to a downloader service
 func (dl *DownloaderConnector) Dial() (DownloaderClient, error) {
-	if dl.Ctx == nil {
-		return DownloaderClient{}, fmt.Errorf("downloaderConnector.Dial: nil context")
-	}
 	grpconn, err := Connector(*dl).connect()
 	if err != nil {
 		return DownloaderClient{}, err
 	}
 	return DownloaderClient{
-		ctx:  dl.Ctx,
 		gdcc: pb.NewGeocubeDownloaderClient(grpconn),
 	}, nil
 }
