@@ -216,7 +216,7 @@ func main() {
 					Action:      cliGetCube,
 					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure catalog get --instances-id dc3845d2-d473-4ed9-a916-7fc88d044966 --records-id b02d7741-0636-4a40-90ce-7880b3d2c952,e14c6bba-9126-446a-bbca-87bb7fc396b6 --compression 0",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "instances-id", Required: true, Usage: "list of variable instance uuid, coma-separated"},
+						cli.StringFlag{Name: "instances-id", Required: true, Usage: "list of variable instance uuid, coma-separated (only one instance is supported for now)"},
 						cli.StringFlag{Name: "records-id", Usage: "list of record uuid, coma-separated (cannot be used with from-time, to-time or tag)"},
 						cli.StringFlag{Name: "from-time", Usage: "filter by date (format: yyyy-MM-dd [HH:mm])(cannot be used with records-id)"},
 						cli.StringFlag{Name: "to-time", Usage: "filter by date (format: yyyy-MM-dd [HH:mm])(cannot be used with records-id)"},
@@ -679,7 +679,7 @@ func cliGetCube(c *cli.Context) {
 
 	if c.IsSet("records-id") {
 		recordsID := toSlice(c.String("records-id"), ",")
-		cubeit, err = client.GetCubeFromRecords(context.Background(), instancesID, recordsID, c.String("crs"), p2c, c.Int64("size-x"), c.Int64("size-y"), outputFormat, c.Int("compression"), headersOnly)
+		cubeit, err = client.GetCubeFromRecords(context.Background(), recordsID, instancesID[0], c.String("crs"), p2c, int32(c.Int("size-x")), int32(c.Int("size-y")), outputFormat, c.Int("compression"), headersOnly)
 
 	} else {
 		var fromT, toT time.Time
@@ -690,7 +690,7 @@ func cliGetCube(c *cli.Context) {
 			toT = mustParseTime(c.String("to-time"))
 		}
 		tags := mustParseDict(c.StringSlice("tag"))
-		cubeit, err = client.GetCube(context.Background(), instancesID, tags, fromT, toT, c.String("crs"), p2c, c.Int64("size-x"), c.Int64("size-y"), outputFormat, c.Int("compression"), headersOnly)
+		cubeit, err = client.GetCubeFromFilters(context.Background(), tags, fromT, toT, instancesID[0], c.String("crs"), p2c, int32(c.Int("size-x")), int32(c.Int("size-y")), outputFormat, c.Int("compression"), headersOnly)
 	}
 
 	if err != nil {

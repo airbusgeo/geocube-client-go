@@ -140,7 +140,24 @@ func (cit *CubeIterator) next() CubeResponse {
 	return resp
 }
 
-// Next implements Iterator
+// Header (global Header)
+func (cit *CubeIterator) Header() CubeHeader {
+	return cit.header
+}
+
+// Value returns the current element. Check CubeElem.Err for a potential error on this element.
+func (cit *CubeIterator) Value() *CubeElem {
+	return &cit.currval
+}
+
+// Err returns an error if Next() failed
+func (cit *CubeIterator) Err() error {
+	return cit.err
+}
+
+// Next loads the next element of the cube and returns true.
+// It returns false if there is no more elements or an error occured.
+// In the latter case, check .Err().
 func (cit *CubeIterator) Next() bool {
 	var resp CubeResponse
 
@@ -231,21 +248,6 @@ func sizeOf(dt pb.DataFormat_Dtype) int {
 	return 0
 }
 
-// Header (global Header)
-func (cit *CubeIterator) Header() CubeHeader {
-	return cit.header
-}
-
-// Value implements Iterator
-func (cit *CubeIterator) Value() *CubeElem {
-	return &cit.currval
-}
-
-// Err implements Iterator
-func (cit *CubeIterator) Err() error {
-	return cit.err
-}
-
 func (c Client) getCube(ctx context.Context, req *pb.GetCubeRequest) (*CubeIterator, error) {
 	if c.dlClient != nil && !req.HeadersOnly {
 		req.HeadersOnly = true
@@ -264,21 +266,21 @@ func (c Client) getCube(ctx context.Context, req *pb.GetCubeRequest) (*CubeItera
 }
 
 // GetCubeFromRecords gets a cube from a list of records
-func (c Client) GetCubeFromRecords(ctx context.Context, instancesID, recordsID []string, crs string, pix2crs [6]float64, sizeX, sizeY int64, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
+func (c Client) GetCubeFromRecords(ctx context.Context, recordsID []string, instanceID string, crs string, pix2crs [6]float64, sizeX, sizeY int32, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
 	return c.getCube(ctx, &pb.GetCubeRequest{
 		RecordsLister:    &pb.GetCubeRequest_Records{Records: &pb.RecordIdList{Ids: recordsID}},
-		InstancesId:      instancesID,
+		InstancesId:      []string{instanceID},
 		Crs:              crs,
 		PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},
-		Size:             &pb.Size{Width: int32(sizeX), Height: int32(sizeY)},
+		Size:             &pb.Size{Width: sizeX, Height: sizeY},
 		CompressionLevel: int32(compression),
 		HeadersOnly:      headersOnly,
 		Format:           pb.FileFormat(format),
 	})
 }
 
-// GetCube gets a cube from a list of filters
-func (c Client) GetCube(ctx context.Context, instancesID []string, tags map[string]string, fromTime, toTime time.Time, crs string, pix2crs [6]float64, sizeX, sizeY int64, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
+// GetCubeFromFilters gets a cube from a list of filters
+func (c Client) GetCubeFromFilters(ctx context.Context, tags map[string]string, fromTime, toTime time.Time, instanceID string, crs string, pix2crs [6]float64, sizeX, sizeY int32, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
 	fromTs := timestamppb.New(fromTime)
 	if err := fromTs.CheckValid(); err != nil {
 		return nil, err
@@ -290,40 +292,32 @@ func (c Client) GetCube(ctx context.Context, instancesID []string, tags map[stri
 
 	return c.getCube(ctx, &pb.GetCubeRequest{
 		RecordsLister:    &pb.GetCubeRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
-		InstancesId:      instancesID,
+		InstancesId:      []string{instanceID},
 		Crs:              crs,
 		PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},
-		Size:             &pb.Size{Width: int32(sizeX), Height: int32(sizeY)},
+		Size:             &pb.Size{Width: sizeX, Height: sizeY},
 		CompressionLevel: int32(compression),
 		HeadersOnly:      headersOnly,
 		Format:           pb.FileFormat(format),
 	})
 }
 
-func (c Client) GetCubeFromTile(ctx context.Context, instancesID []string, tags map[string]string, fromTime, toTime time.Time, tile *Tile, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
-	fromTs := timestamppb.New(fromTime)
-	if err := fromTs.CheckValid(); err != nil {
-		return nil, err
+// GetCubeFromTile gets a cube from a tile and a list of records or filters
+func (c Client) GetCubeFromTile(ctx context.Context, tile *Tile, instanceID string, recordIDs []string, gRecordIDs [][]string, tags map[string]string, fromTime, toTime time.Time, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
+	if recordIDs != nil {
+		if gRecordIDs != nil || !toTime.IsZero() || !fromTime.IsZero() || len(tags) != 0 {
+			return nil, fmt.Errorf("records, groupedRecords and time or tags are defined: records, grecords and filters are mutually exclusive")
+		}
+		return c.GetCubeFromRecords(ctx, recordIDs, instanceID, tile.CRS, tile.Transform, tile.Width, tile.Height, format, compression, headersOnly)
 	}
-	toTs := timestamppb.New(toTime)
-	if err := toTs.CheckValid(); err != nil {
-		return nil, err
+	if gRecordIDs != nil {
+		if !toTime.IsZero() || !fromTime.IsZero() || len(tags) != 0 {
+			return nil, fmt.Errorf("groupedRecords and time or tags are defined: grecords and filters are mutually exclusive")
+		}
+		return c.GetCubeFromGroupedRecords(ctx, gRecordIDs, instanceID, tile.CRS, tile.Transform, tile.Width, tile.Height, format, compression, headersOnly)
+
 	}
-	geoTransform := pb.GeoTransform{A: tile.Transform[0],
-		B: tile.Transform[1], C: tile.Transform[2],
-		D: tile.Transform[3], E: tile.Transform[4],
-		F: tile.Transform[5]}
-	size := pb.Size{Width: tile.Width, Height: tile.Height}
-	return c.getCube(ctx, &pb.GetCubeRequest{
-		RecordsLister:    &pb.GetCubeRequest_Filters{Filters: &pb.RecordFilters{Tags: tags, FromTime: fromTs, ToTime: toTs}},
-		InstancesId:      instancesID,
-		Crs:              tile.CRS,
-		PixToCrs:         &geoTransform,
-		Size:             &size,
-		CompressionLevel: int32(compression),
-		HeadersOnly:      headersOnly,
-		Format:           pb.FileFormat(format),
-	})
+	return c.GetCubeFromFilters(ctx, tags, fromTime, toTime, instanceID, tile.CRS, tile.Transform, tile.Width, tile.Height, format, compression, headersOnly)
 }
 
 func (d DownloaderClient) DownloadCube(ctx context.Context, iter *CubeIterator, format Format) (*CubeIterator, error) {
