@@ -279,6 +279,25 @@ func (c Client) GetCubeFromRecords(ctx context.Context, recordsID []string, inst
 	})
 }
 
+// GetCubeFromGroupedRecords gets a cube from a list of grouped records
+func (c Client) GetCubeFromGroupedRecords(ctx context.Context, recordsID [][]string, instanceID string, crs string, pix2crs [6]float64, sizeX, sizeY int32, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
+	groupedRecords := make([]*pb.GroupedRecordIds, 0, len(recordsID))
+	for _, records := range recordsID {
+		groupedRecords = append(groupedRecords, &pb.GroupedRecordIds{Ids: records})
+	}
+
+	return c.getCube(ctx, &pb.GetCubeRequest{
+		RecordsLister:    &pb.GetCubeRequest_GroupedRecords{GroupedRecords: &pb.GroupedRecordIdsList{Records: groupedRecords}},
+		InstancesId:      []string{instanceID},
+		Crs:              crs,
+		PixToCrs:         &pb.GeoTransform{A: pix2crs[0], B: pix2crs[1], C: pix2crs[2], D: pix2crs[3], E: pix2crs[4], F: pix2crs[5]},
+		Size:             &pb.Size{Width: sizeX, Height: sizeY},
+		CompressionLevel: int32(compression),
+		HeadersOnly:      headersOnly,
+		Format:           pb.FileFormat(format),
+	})
+}
+
 // GetCubeFromFilters gets a cube from a list of filters
 func (c Client) GetCubeFromFilters(ctx context.Context, tags map[string]string, fromTime, toTime time.Time, instanceID string, crs string, pix2crs [6]float64, sizeX, sizeY int32, format Format, compression int, headersOnly bool) (*CubeIterator, error) {
 	fromTs := timestamppb.New(fromTime)

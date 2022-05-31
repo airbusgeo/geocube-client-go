@@ -220,3 +220,28 @@ func (c Client) ListRecords(ctx context.Context, name string, tags map[string]st
 
 	return records, nil
 }
+
+// convert types take an int and return a string value.
+type GroupByKeyFunc func(*Record) string
+
+func GroupByDayKey(record *Record) string {
+	return record.Time.Format("2006-01-02")
+}
+
+// GroupBy groups the records of the list by the key provided by the func_key(Record)
+// Returns a list of grouped records ID
+func GroupBy(records []*Record, funcKey GroupByKeyFunc) [][]string {
+	results := [][]string{}
+	indices := map[string]int{}
+	for _, r := range records {
+		key := funcKey(r)
+		index, ok := indices[key]
+		if !ok {
+			index = len(results)
+			indices[key] = index
+			results = append(results, []string{})
+		}
+		results[index] = append(results[index], r.ID)
+	}
+	return results
+}
