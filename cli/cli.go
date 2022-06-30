@@ -699,8 +699,7 @@ func cliGetCube(c *cli.Context) {
 
 	i := 1
 	fmt.Printf("Getting %d images from %d datasets\n", cubeit.Header().Count, cubeit.Header().NbDatasets)
-	for cubeit.Next() {
-		img := cubeit.Value()
+	for img := cubeit.Value(); cubeit.Next(); {
 		minTime, maxTime := img.Records[0].Time, img.Records[0].Time
 		for _, r := range img.Records {
 			if r.Time.Before(minTime) {

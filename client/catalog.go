@@ -145,12 +145,14 @@ func (cit *CubeIterator) Header() CubeHeader {
 	return cit.header
 }
 
-// Value returns the current element. Check CubeElem.Err for a potential error on this element.
+// Value returns a pointer to the current element. The pointer remains valid as long as cubeiterator is.
+// The value is updated when cit.Next() is called.
+// Check CubeElem.Err for a potential error on this element.
 func (cit *CubeIterator) Value() *CubeElem {
 	return &cit.currval
 }
 
-// Err returns an error if Next() failed
+// Err returns the error if the iterator failed to go to next Element.
 func (cit *CubeIterator) Err() error {
 	return cit.err
 }
@@ -174,12 +176,14 @@ func (cit *CubeIterator) Next() bool {
 			return false
 		}
 
-		// Reset currval
+		// Reset currval (and the values returned by Value())
 		internals := make([]*InternalMeta, len(header.DatasetMeta.InternalsMeta))
 		cit.currval = CubeElem{
 			Records:      make([]*Record, len(header.GroupedRecords.Records)),
 			DatasetsMeta: &DatasetMeta{Internals: internals},
 			Order:        header.Order,
+			Err:          header.GetError(),
+			DType:        header.GetDtype(),
 		}
 
 		for i, r := range header.GroupedRecords.Records {
@@ -188,13 +192,11 @@ func (cit *CubeIterator) Next() bool {
 		for i, d := range header.DatasetMeta.InternalsMeta {
 			cit.currval.DatasetsMeta.Internals[i] = NewInternalMetaFromPb(d)
 		}
-		if header.GetError() != "" {
-			cit.currval.Err = header.GetError()
+		if cit.currval.Err != "" {
 			return true
 		}
-
 		cit.currval.Shape = [3]int32{header.Shape.Dim1, header.Shape.Dim2, header.Shape.Dim3}
-		cit.currval.DType = header.GetDtype()
+
 		data.Grow(int(header.GetSize()))
 		data.Write(header.GetData())
 	}
@@ -342,8 +344,7 @@ func (c Client) GetCubeFromTile(ctx context.Context, tile *Tile, instanceID stri
 func (d DownloaderClient) DownloadCube(ctx context.Context, iter *CubeIterator, format Format) (*CubeIterator, error) {
 	var dsMeta []*pb.DatasetMeta
 	var groupedRecords []*pb.GroupedRecords
-	for iter.Next() {
-		headers := iter.Value()
+	for headers := iter.Value(); iter.Next(); {
 		internals := headers.DatasetsMeta.Internals
 		internalsMeta := make([]*pb.InternalMeta, len(internals))
 		for i, element := range internals {
