@@ -9,6 +9,9 @@ import (
 	pb "github.com/airbusgeo/geocube-client-go/pb"
 )
 
+var MUCOGPattern = "Z=0>T>R>B;R>Z=1:>T>B"
+var COGPattern = "R>Z=1:>T>B;R>Z=0>T>B"
+
 type Layout pb.Layout
 
 type Tile struct {
@@ -37,7 +40,7 @@ func NewTileFromPb(pbt *pb.Tile) *Tile {
 	}
 }
 
-func NewRegularLayout(name, crs string, resolution float64, sizeXPx, sizeYPx, originX, originY, blockXSize, blockYSize, maxRecords int64) Layout {
+func NewRegularLayout(name, crs string, resolution float64, sizeXPx, sizeYPx, originX, originY, blockXSize, blockYSize, maxRecords, overviewsMinSize int64, interlacingPattern string) Layout {
 	if blockXSize == -1 {
 		blockXSize = 256
 	}
@@ -60,21 +63,25 @@ func NewRegularLayout(name, crs string, resolution float64, sizeXPx, sizeYPx, or
 			"ox":          fmt.Sprintf("%v", originX),
 			"oy":          fmt.Sprintf("%v", originY),
 		},
-		BlockXSize: blockXSize,
-		BlockYSize: blockYSize,
-		MaxRecords: maxRecords,
+		BlockXSize:         blockXSize,
+		BlockYSize:         blockYSize,
+		MaxRecords:         maxRecords,
+		OverviewsMinSize:   overviewsMinSize,
+		InterlacingPattern: interlacingPattern,
 	}
 }
 
-func (c Client) CreateLayout(ctx context.Context, name string, gridFlags []string, gridParameters map[string]string, blockXSize, blockYSize, maxRecords int64) error {
+func (c Client) CreateLayout(ctx context.Context, name string, gridFlags []string, gridParameters map[string]string, blockXSize, blockYSize, maxRecords, overviewsMinSize int64, interlacingPattern string) error {
 	if _, err := c.gcc.CreateLayout(ctx,
 		&pb.CreateLayoutRequest{Layout: &pb.Layout{
-			Name:           name,
-			GridFlags:      gridFlags,
-			GridParameters: gridParameters,
-			BlockXSize:     blockXSize,
-			BlockYSize:     blockYSize,
-			MaxRecords:     maxRecords}}); err != nil {
+			Name:               name,
+			GridFlags:          gridFlags,
+			GridParameters:     gridParameters,
+			BlockXSize:         blockXSize,
+			BlockYSize:         blockYSize,
+			MaxRecords:         maxRecords,
+			OverviewsMinSize:   overviewsMinSize,
+			InterlacingPattern: interlacingPattern}}); err != nil {
 		return grpcError(err)
 	}
 
@@ -135,12 +142,15 @@ func (c Client) TileAOI(ctx context.Context, aoi AOI, layoutName string, layout 
 // ToString returns a string with a representation of the layout
 func (l *Layout) ToString() string {
 	s := fmt.Sprintf("Layout %s:\n"+
-		"  Block XSize:     %d\n"+
-		"  Block YSize:     %d\n"+
-		"  Max records:     %d\n"+
-		"  Grid flags:      %s\n"+
+		"  Block XSize:         %d\n"+
+		"  Block YSize:         %d\n"+
+		"  Max records:         %d\n"+
+		"  OverviewsMinSize:    %d\n"+
+		"  Interlacing pattern: %s\n"+
+		"  Grid flags:          %s\n"+
 		"  Grid parameters:\n",
-		l.Name, l.BlockXSize, l.BlockYSize, l.MaxRecords, strings.Join(l.GridFlags, " "))
+		l.Name, l.BlockXSize, l.BlockYSize, l.MaxRecords, l.OverviewsMinSize, l.InterlacingPattern,
+		strings.Join(l.GridFlags, " "))
 	appendDict(l.GridParameters, &s)
 	return s
 }

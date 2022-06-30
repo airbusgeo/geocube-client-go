@@ -178,6 +178,8 @@ func main() {
 						cli.StringFlag{Name: "grid-string", Required: true},
 						cli.IntFlag{Name: "block-size", Value: 256},
 						cli.IntFlag{Name: "max-records", Value: 1000},
+						cli.BoolFlag{Name: "overviews", Usage: "Create overviews up to min-size (0: No overview, -1: default=256)"},
+						cli.StringFlag{Name: "interlacing-pattern", Value: gcclient.MUCOGPattern, Usage: "Interlacing pattern (see https://airbusgeo.github.io/geocube/user-guide/grpc/#geocube-ConsolidationParams)"},
 					},
 				},
 				{
@@ -381,9 +383,7 @@ func main() {
 						cli.StringFlag{Name: "variable-id", Required: true, Usage: "uuid of a variable"},
 						cli.StringFlag{Name: "dformat", Required: true, Usage: "dtype[int8-16-32 uint8-16-32 float32-64 complex64],nodata,minvalue,maxvalue"},
 						cli.Float64Flag{Name: "exponent", Value: 1, Usage: "for non-linear scaling between dformat and variable.dformat (1: linear scaling)"},
-						cli.BoolFlag{Name: "bands-interleave", Usage: "Interleave bands"},
 						cli.IntFlag{Name: "compression", Value: 1, Usage: "0: No, 1: Lossless, 2: Lossy"},
-						cli.BoolFlag{Name: "overviews", Usage: "Create overviews up to min-size (0: No overview, -1: default=256)"},
 						cli.StringFlag{Name: "resampling-alg", Value: "NEAR", Usage: "NEAR BILINEAR CUBIC CUBICSPLINE LANCZOS AVERAGE MODE MAX MIN MED Q1 Q3 (for overviews and reprojection)"},
 						cli.IntFlag{Name: "storage-class", Value: 0, Usage: "0: STANDARD, 1:INFREQUENT, 2: ARCHIVE, 3:DEEPARCHIVE"},
 					},
@@ -608,7 +608,7 @@ func cliCreateLayout(c *cli.Context) {
 		}
 	}
 
-	if err := client.CreateLayout(context.Background(), c.String("name"), gridFlags, gridParameters, c.Int64("block-size"), c.Int64("block-size"), c.Int64("max-records")); err != nil {
+	if err := client.CreateLayout(context.Background(), c.String("name"), gridFlags, gridParameters, c.Int64("block-size"), c.Int64("block-size"), c.Int64("max-records"), c.Int64("overviews"), c.String("interlacing-pattern")); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -633,7 +633,7 @@ func cliTileAOI(c *cli.Context) {
 	if c.String("layout") != "" {
 		tiles, err = client.TileAOI(context.Background(), aoi, c.String("layout"), nil)
 	} else {
-		layout := gcclient.NewRegularLayout("", c.String("crs"), c.Float64("resolution"), c.Int64("size-x"), c.Int64("size-y"), 0, 0, -1, -1, -1)
+		layout := gcclient.NewRegularLayout("", c.String("crs"), c.Float64("resolution"), c.Int64("size-x"), c.Int64("size-y"), 0, 0, -1, -1, -1, -1, gcclient.MUCOGPattern)
 		tiles, err = client.TileAOI(context.Background(), aoi, "", &layout)
 	}
 
@@ -896,7 +896,7 @@ func cliConfigConsolidation(c *cli.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = client.ConfigConsolidation(context.Background(), c.String("variable-id"), dformat, c.Float64("exponent"), c.Bool("bands-interleave"), c.Int("compression"), c.Int("overviews"), c.String("resampling-alg"), c.Int("storage-class"))
+	err = client.ConfigConsolidation(context.Background(), c.String("variable-id"), dformat, c.Float64("exponent"), c.Int("compression"), c.String("resampling-alg"), c.Int("storage-class"))
 	if err != nil {
 		log.Fatal(err)
 	}

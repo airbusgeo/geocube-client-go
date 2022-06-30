@@ -55,17 +55,15 @@ func (c Client) CleanJobs(ctx context.Context, nameLike, state string) (int32, e
 }
 
 // ConfigConsolidation configures the parameters associated to this variable
-func (c Client) ConfigConsolidation(ctx context.Context, variableID string, dformat *DataFormat, exponent float64, bandsInterleave bool, compression int, overviewsMinSize int, resamplingAlg string, storageClass int) error {
+func (c Client) ConfigConsolidation(ctx context.Context, variableID string, dformat *DataFormat, exponent float64, compression int, resamplingAlg string, storageClass int) error {
 	_, err := c.gcc.ConfigConsolidation(ctx, &pb.ConfigConsolidationRequest{
 		VariableId: variableID,
 		ConsolidationParams: &pb.ConsolidationParams{
-			Dformat:          (*pb.DataFormat)(dformat),
-			Exponent:         exponent,
-			BandsInterleave:  bandsInterleave,
-			Compression:      pb.ConsolidationParams_Compression(compression),
-			OverviewsMinSize: int32(overviewsMinSize),
-			ResamplingAlg:    toResampling(resamplingAlg),
-			StorageClass:     pb.StorageClass(storageClass),
+			Dformat:       (*pb.DataFormat)(dformat),
+			Exponent:      exponent,
+			Compression:   pb.ConsolidationParams_Compression(compression),
+			ResamplingAlg: toResampling(resamplingAlg),
+			StorageClass:  pb.StorageClass(storageClass),
 		}})
 	return grpcError(err)
 }
