@@ -44,6 +44,15 @@ func (c *Client) ServerVersion(ctx context.Context) (string, error) {
 	return resp.Version, nil
 }
 
+// Version returns the version of the Geocube downloader
+func (c DownloaderClient) Version(ctx context.Context) (string, error) {
+	resp, err := c.gdcc.Version(ctx, &pb.GetVersionRequest{})
+	if err != nil {
+		return "", grpcError(err)
+	}
+	return resp.Version, nil
+}
+
 func (c Connector) connect() (*grpc.ClientConn, error) {
 	opts := []grpc.DialOption{}
 	if c.Creds == nil {
