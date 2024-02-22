@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -229,6 +228,15 @@ func main() {
 						cli.IntFlag{Name: "compression", Value: 0, Usage: "compression level (0: uncompressed, 1 to 9: fastest to best compression)"},
 						cli.StringFlag{Name: "crs", Required: true, Usage: "proj4, wkt, epsg crs"},
 						cli.BoolFlag{Name: "headers-only", Usage: "returns only image headers"},
+					},
+				},
+				{
+					Name:        "containers",
+					Usage:       "containers returns info on the containers in the geocube",
+					Action:      cliGetContainers,
+					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure catalog container --uri /path-to-a-file-indexed-in-the-geocube",
+					Flags: []cli.Flag{
+						cli.StringSliceFlag{Name: "uri", Required: true, Usage: "uri of the container to get info from"},
 					},
 				},
 			},
@@ -722,7 +730,7 @@ func cliGetCube(c *cli.Context) {
 				fmt.Printf("Image %d (%s): %dx%dx%d (id=%s)\n", i, recordTimes, shape[0], shape[1], shape[2], img.Records[0].ID)
 			} else {
 				fmt.Printf("Image %d (%s): %dx%dx%d\n", i, recordTimes, shape[0], shape[1], shape[2])
-				if err := ioutil.WriteFile(fmt.Sprintf("%s_%s."+outputExt, img.Records[0].Name, recordTimes), img.Data, os.ModePerm); err != nil {
+				if err := os.WriteFile(fmt.Sprintf("%s_%s."+outputExt, img.Records[0].Name, recordTimes), img.Data, os.ModePerm); err != nil {
 					log.Fatal(err)
 				}
 			}
@@ -731,6 +739,24 @@ func cliGetCube(c *cli.Context) {
 	}
 	if cubeit.Err() != nil {
 		log.Fatal(cubeit.Err().Error())
+	}
+}
+
+func cliGetContainers(c *cli.Context) {
+	uris := c.StringSlice("uri")
+	containers, err := client.GetContainers(context.Background(), uris)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, container := range containers {
+		fmt.Printf("Container %s (managed: %v):\n", container.Uri, container.Managed)
+		for _, dataset := range container.Datasets {
+			fmt.Printf("  Dataset %s bands: %v (record: %s, instance: %s): (%s, %f, [%f, %f])\n", dataset.ContainerSubdir, dataset.Bands, dataset.RecordId, dataset.InstanceId,
+				dataset.Dformat.Dtype.String(), dataset.Dformat.NoData, dataset.Dformat.MinValue, dataset.Dformat.MaxValue)
+		}
+
 	}
 }
 

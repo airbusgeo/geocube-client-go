@@ -383,3 +383,54 @@ func (d DownloaderClient) DownloadCube(ctx context.Context, iter *CubeIterator, 
 	}
 	return NewCubeIterator(DownloaderStream{stream}, iter.header.Width, iter.header.Height)
 }
+
+type Dataset struct {
+	RecordId        string
+	InstanceId      string
+	ContainerSubdir string
+	Bands           []int64
+	Dformat         *DataFormat
+	RealMinValue    float64
+	RealMaxValue    float64
+	Exponent        float64
+}
+type Container struct {
+	Uri      string
+	Managed  bool
+	Datasets []*Dataset
+}
+
+func NewContainerFromPb(c *pb.Container) *Container {
+	datasets := make([]*Dataset, 0, len(c.Datasets))
+	for _, d := range c.Datasets {
+		datasets = append(datasets, &Dataset{
+			RecordId:        d.RecordId,
+			InstanceId:      d.InstanceId,
+			ContainerSubdir: d.ContainerSubdir,
+			Bands:           d.Bands,
+			Dformat:         (*DataFormat)(d.Dformat),
+			RealMinValue:    d.RealMinValue,
+			RealMaxValue:    d.RealMaxValue,
+			Exponent:        d.Exponent,
+		})
+	}
+	return &Container{
+		Uri:      c.Uri,
+		Managed:  c.Managed,
+		Datasets: datasets,
+	}
+}
+
+// GetContainers gets information on containers
+func (c Client) GetContainers(ctx context.Context, uris []string) ([]*Container, error) {
+	resp, err := c.gcc.GetContainers(ctx, &pb.GetContainersRequest{
+		Uris: uris,
+	})
+
+	containers := make([]*Container, 0, len(resp.Containers))
+	for _, c := range resp.Containers {
+		containers = append(containers, NewContainerFromPb(c))
+	}
+
+	return containers, grpcError(err)
+}

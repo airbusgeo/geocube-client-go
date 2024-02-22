@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -19,7 +19,7 @@ import (
 // For Geojson File : it merges all the polygons and multipolygons into one multipolygon
 // If provided, the CRS is ignored
 func AOIFromFile(path string) (AOI, error) {
-	file, err := ioutil.ReadFile(path)
+	file, err := os.ReadFile(path)
 	if err != nil {
 		return AOI{}, fmt.Errorf("unable to read file %s: %s", path, err)
 	}

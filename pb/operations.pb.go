@@ -138,6 +138,7 @@ const (
 	ConsolidationParams_NO       ConsolidationParams_Compression = 0
 	ConsolidationParams_LOSSLESS ConsolidationParams_Compression = 1
 	ConsolidationParams_LOSSY    ConsolidationParams_Compression = 2
+	ConsolidationParams_CUSTOM   ConsolidationParams_Compression = 3 // configured by creation_params
 )
 
 // Enum value maps for ConsolidationParams_Compression.
@@ -146,11 +147,13 @@ var (
 		0: "NO",
 		1: "LOSSLESS",
 		2: "LOSSY",
+		3: "CUSTOM",
 	}
 	ConsolidationParams_Compression_value = map[string]int32{
 		"NO":       0,
 		"LOSSLESS": 1,
 		"LOSSY":    2,
+		"CUSTOM":   3,
 	}
 )
 
@@ -178,7 +181,7 @@ func (x ConsolidationParams_Compression) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ConsolidationParams_Compression.Descriptor instead.
 func (ConsolidationParams_Compression) EnumDescriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{5, 0}
+	return file_pb_operations_proto_rawDescGZIP(), []int{7, 0}
 }
 
 // *
@@ -493,6 +496,103 @@ func (x *Job) GetWaiting() bool {
 }
 
 // *
+// Request info on containers
+type GetContainersRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uris []string `protobuf:"bytes,1,rep,name=uris,proto3" json:"uris,omitempty"` // List of container uris
+}
+
+func (x *GetContainersRequest) Reset() {
+	*x = GetContainersRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pb_operations_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetContainersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetContainersRequest) ProtoMessage() {}
+
+func (x *GetContainersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pb_operations_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetContainersRequest.ProtoReflect.Descriptor instead.
+func (*GetContainersRequest) Descriptor() ([]byte, []int) {
+	return file_pb_operations_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetContainersRequest) GetUris() []string {
+	if x != nil {
+		return x.Uris
+	}
+	return nil
+}
+
+// *
+type GetContainersResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Containers []*Container `protobuf:"bytes,1,rep,name=containers,proto3" json:"containers,omitempty"`
+}
+
+func (x *GetContainersResponse) Reset() {
+	*x = GetContainersResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_pb_operations_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetContainersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetContainersResponse) ProtoMessage() {}
+
+func (x *GetContainersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pb_operations_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetContainersResponse.ProtoReflect.Descriptor instead.
+func (*GetContainersResponse) Descriptor() ([]byte, []int) {
+	return file_pb_operations_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetContainersResponse) GetContainers() []*Container {
+	if x != nil {
+		return x.Containers
+	}
+	return nil
+}
+
+// *
 // Request to index all the datasets of a container
 type IndexDatasetsRequest struct {
 	state         protoimpl.MessageState
@@ -506,7 +606,7 @@ type IndexDatasetsRequest struct {
 func (x *IndexDatasetsRequest) Reset() {
 	*x = IndexDatasetsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[3]
+		mi := &file_pb_operations_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -519,7 +619,7 @@ func (x *IndexDatasetsRequest) String() string {
 func (*IndexDatasetsRequest) ProtoMessage() {}
 
 func (x *IndexDatasetsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[3]
+	mi := &file_pb_operations_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -532,7 +632,7 @@ func (x *IndexDatasetsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IndexDatasetsRequest.ProtoReflect.Descriptor instead.
 func (*IndexDatasetsRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{3}
+	return file_pb_operations_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *IndexDatasetsRequest) GetContainer() *Container {
@@ -552,7 +652,7 @@ type IndexDatasetsResponse struct {
 func (x *IndexDatasetsResponse) Reset() {
 	*x = IndexDatasetsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[4]
+		mi := &file_pb_operations_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -565,7 +665,7 @@ func (x *IndexDatasetsResponse) String() string {
 func (*IndexDatasetsResponse) ProtoMessage() {}
 
 func (x *IndexDatasetsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[4]
+	mi := &file_pb_operations_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -578,13 +678,15 @@ func (x *IndexDatasetsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IndexDatasetsResponse.ProtoReflect.Descriptor instead.
 func (*IndexDatasetsResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{4}
+	return file_pb_operations_proto_rawDescGZIP(), []int{6}
 }
 
 // *
 // Parameters of consolidation that are linked to a variable, to define:
-// - how to store the data
 // - how to resample the data during consolidation
+// - how to store the data:
+//   - Compression
+//   - CreationParams (supported: see GDAL drivers: PHOTOMETRIC, COMPRESS, PREDICTOR, ZLEVEL, ZSTDLEVEL, MAX_Z_ERROR, JPEGTABLESMODE and with _OVERVIEW suffix if exists)
 type ConsolidationParams struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -593,9 +695,10 @@ type ConsolidationParams struct {
 	Dformat  *DataFormat `protobuf:"bytes,1,opt,name=dformat,proto3" json:"dformat,omitempty"`     // dataformat of the data. See exponent for the mapping formula.
 	Exponent float64     `protobuf:"fixed64,2,opt,name=exponent,proto3" json:"exponent,omitempty"` // 1: linear scaling (RealMax - RealMin) * pow( (Value - Min) / (Max - Min), Exponent) + RealMin
 	// Deprecated: Do not use.
-	CreateOverviews bool                            `protobuf:"varint,3,opt,name=create_overviews,json=createOverviews,proto3" json:"create_overviews,omitempty"`                   // Use Layout.overviews_min_size instead
-	ResamplingAlg   Resampling                      `protobuf:"varint,4,opt,name=resampling_alg,json=resamplingAlg,proto3,enum=geocube.Resampling" json:"resampling_alg,omitempty"` // Define how to resample the data during the consolidation (if a reprojection is needed or if the overviews are created)
-	Compression     ConsolidationParams_Compression `protobuf:"varint,5,opt,name=compression,proto3,enum=geocube.ConsolidationParams_Compression" json:"compression,omitempty"`     // Define how the data is compressed at block level
+	CreateOverviews bool                            `protobuf:"varint,3,opt,name=create_overviews,json=createOverviews,proto3" json:"create_overviews,omitempty"`                                                                                     // Use Layout.overviews_min_size instead
+	ResamplingAlg   Resampling                      `protobuf:"varint,4,opt,name=resampling_alg,json=resamplingAlg,proto3,enum=geocube.Resampling" json:"resampling_alg,omitempty"`                                                                   // Define how to resample the data during the consolidation (if a reprojection is needed or if the overviews are created)
+	Compression     ConsolidationParams_Compression `protobuf:"varint,5,opt,name=compression,proto3,enum=geocube.ConsolidationParams_Compression" json:"compression,omitempty"`                                                                       // Define how the data is compressed at block level
+	CreationParams  map[string]string               `protobuf:"bytes,8,rep,name=creation_params,json=creationParams,proto3" json:"creation_params,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // map of params:value to configure the creation of the file. See Compression to list the supported params
 	// Deprecated: Do not use.
 	BandsInterleave bool         `protobuf:"varint,6,opt,name=bands_interleave,json=bandsInterleave,proto3" json:"bands_interleave,omitempty"`                  // If the variable is multibands, define whether the bands are interleaved. Use Layout.interlacing_pattern instead
 	StorageClass    StorageClass `protobuf:"varint,7,opt,name=storage_class,json=storageClass,proto3,enum=geocube.StorageClass" json:"storage_class,omitempty"` // Define the storage class of the created file (support only GCS)
@@ -604,7 +707,7 @@ type ConsolidationParams struct {
 func (x *ConsolidationParams) Reset() {
 	*x = ConsolidationParams{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[5]
+		mi := &file_pb_operations_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -617,7 +720,7 @@ func (x *ConsolidationParams) String() string {
 func (*ConsolidationParams) ProtoMessage() {}
 
 func (x *ConsolidationParams) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[5]
+	mi := &file_pb_operations_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -630,7 +733,7 @@ func (x *ConsolidationParams) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConsolidationParams.ProtoReflect.Descriptor instead.
 func (*ConsolidationParams) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{5}
+	return file_pb_operations_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ConsolidationParams) GetDformat() *DataFormat {
@@ -669,6 +772,13 @@ func (x *ConsolidationParams) GetCompression() ConsolidationParams_Compression {
 	return ConsolidationParams_NO
 }
 
+func (x *ConsolidationParams) GetCreationParams() map[string]string {
+	if x != nil {
+		return x.CreationParams
+	}
+	return nil
+}
+
 // Deprecated: Do not use.
 func (x *ConsolidationParams) GetBandsInterleave() bool {
 	if x != nil {
@@ -698,7 +808,7 @@ type ConfigConsolidationRequest struct {
 func (x *ConfigConsolidationRequest) Reset() {
 	*x = ConfigConsolidationRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[6]
+		mi := &file_pb_operations_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -711,7 +821,7 @@ func (x *ConfigConsolidationRequest) String() string {
 func (*ConfigConsolidationRequest) ProtoMessage() {}
 
 func (x *ConfigConsolidationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[6]
+	mi := &file_pb_operations_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -724,7 +834,7 @@ func (x *ConfigConsolidationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigConsolidationRequest.ProtoReflect.Descriptor instead.
 func (*ConfigConsolidationRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{6}
+	return file_pb_operations_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ConfigConsolidationRequest) GetVariableId() string {
@@ -751,7 +861,7 @@ type ConfigConsolidationResponse struct {
 func (x *ConfigConsolidationResponse) Reset() {
 	*x = ConfigConsolidationResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[7]
+		mi := &file_pb_operations_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -764,7 +874,7 @@ func (x *ConfigConsolidationResponse) String() string {
 func (*ConfigConsolidationResponse) ProtoMessage() {}
 
 func (x *ConfigConsolidationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[7]
+	mi := &file_pb_operations_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -777,7 +887,7 @@ func (x *ConfigConsolidationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigConsolidationResponse.ProtoReflect.Descriptor instead.
 func (*ConfigConsolidationResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{7}
+	return file_pb_operations_proto_rawDescGZIP(), []int{9}
 }
 
 // *
@@ -793,7 +903,7 @@ type GetConsolidationParamsRequest struct {
 func (x *GetConsolidationParamsRequest) Reset() {
 	*x = GetConsolidationParamsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[8]
+		mi := &file_pb_operations_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -806,7 +916,7 @@ func (x *GetConsolidationParamsRequest) String() string {
 func (*GetConsolidationParamsRequest) ProtoMessage() {}
 
 func (x *GetConsolidationParamsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[8]
+	mi := &file_pb_operations_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -819,7 +929,7 @@ func (x *GetConsolidationParamsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConsolidationParamsRequest.ProtoReflect.Descriptor instead.
 func (*GetConsolidationParamsRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{8}
+	return file_pb_operations_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetConsolidationParamsRequest) GetVariableId() string {
@@ -842,7 +952,7 @@ type GetConsolidationParamsResponse struct {
 func (x *GetConsolidationParamsResponse) Reset() {
 	*x = GetConsolidationParamsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[9]
+		mi := &file_pb_operations_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -855,7 +965,7 @@ func (x *GetConsolidationParamsResponse) String() string {
 func (*GetConsolidationParamsResponse) ProtoMessage() {}
 
 func (x *GetConsolidationParamsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[9]
+	mi := &file_pb_operations_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -868,7 +978,7 @@ func (x *GetConsolidationParamsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConsolidationParamsResponse.ProtoReflect.Descriptor instead.
 func (*GetConsolidationParamsResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{9}
+	return file_pb_operations_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetConsolidationParamsResponse) GetConsolidationParams() *ConsolidationParams {
@@ -889,10 +999,11 @@ type ConsolidateRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	JobName        string         `protobuf:"bytes,1,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`
-	InstanceId     string         `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
-	LayoutName     string         `protobuf:"bytes,7,opt,name=layout_name,json=layoutName,proto3" json:"layout_name,omitempty"`
-	ExecutionLevel ExecutionLevel `protobuf:"varint,6,opt,name=execution_level,json=executionLevel,proto3,enum=geocube.ExecutionLevel" json:"execution_level,omitempty"` // Execution level of a job. A consolidation job cannot be executed synchronously
+	JobName            string         `protobuf:"bytes,1,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`
+	InstanceId         string         `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	LayoutName         string         `protobuf:"bytes,7,opt,name=layout_name,json=layoutName,proto3" json:"layout_name,omitempty"`
+	ExecutionLevel     ExecutionLevel `protobuf:"varint,6,opt,name=execution_level,json=executionLevel,proto3,enum=geocube.ExecutionLevel" json:"execution_level,omitempty"` // Execution level of a job. A consolidation job cannot be executed synchronously
+	CollapseOnRecordId string         `protobuf:"bytes,9,opt,name=collapse_on_record_id,json=collapseOnRecordId,proto3" json:"collapse_on_record_id,omitempty"`              // [Optional] Collapse all records on this record (in this case only, original datasets are kept, data is duplicated)
 	// Types that are assignable to RecordsLister:
 	//
 	//	*ConsolidateRequest_Records
@@ -903,7 +1014,7 @@ type ConsolidateRequest struct {
 func (x *ConsolidateRequest) Reset() {
 	*x = ConsolidateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[10]
+		mi := &file_pb_operations_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -916,7 +1027,7 @@ func (x *ConsolidateRequest) String() string {
 func (*ConsolidateRequest) ProtoMessage() {}
 
 func (x *ConsolidateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[10]
+	mi := &file_pb_operations_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -929,7 +1040,7 @@ func (x *ConsolidateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConsolidateRequest.ProtoReflect.Descriptor instead.
 func (*ConsolidateRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{10}
+	return file_pb_operations_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ConsolidateRequest) GetJobName() string {
@@ -958,6 +1069,13 @@ func (x *ConsolidateRequest) GetExecutionLevel() ExecutionLevel {
 		return x.ExecutionLevel
 	}
 	return ExecutionLevel_ExecutionSynchronous
+}
+
+func (x *ConsolidateRequest) GetCollapseOnRecordId() string {
+	if x != nil {
+		return x.CollapseOnRecordId
+	}
+	return ""
 }
 
 func (m *ConsolidateRequest) GetRecordsLister() isConsolidateRequest_RecordsLister {
@@ -1010,7 +1128,7 @@ type ConsolidateResponse struct {
 func (x *ConsolidateResponse) Reset() {
 	*x = ConsolidateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[11]
+		mi := &file_pb_operations_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1023,7 +1141,7 @@ func (x *ConsolidateResponse) String() string {
 func (*ConsolidateResponse) ProtoMessage() {}
 
 func (x *ConsolidateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[11]
+	mi := &file_pb_operations_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1036,7 +1154,7 @@ func (x *ConsolidateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConsolidateResponse.ProtoReflect.Descriptor instead.
 func (*ConsolidateResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{11}
+	return file_pb_operations_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ConsolidateResponse) GetJobId() string {
@@ -1054,12 +1172,14 @@ type ListJobsRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	NameLike string `protobuf:"bytes,1,opt,name=name_like,json=nameLike,proto3" json:"name_like,omitempty"`
+	Page     int32  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	Limit    int32  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 }
 
 func (x *ListJobsRequest) Reset() {
 	*x = ListJobsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[12]
+		mi := &file_pb_operations_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1072,7 +1192,7 @@ func (x *ListJobsRequest) String() string {
 func (*ListJobsRequest) ProtoMessage() {}
 
 func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[12]
+	mi := &file_pb_operations_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1085,7 +1205,7 @@ func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListJobsRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{12}
+	return file_pb_operations_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListJobsRequest) GetNameLike() string {
@@ -1093,6 +1213,20 @@ func (x *ListJobsRequest) GetNameLike() string {
 		return x.NameLike
 	}
 	return ""
+}
+
+func (x *ListJobsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListJobsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
 }
 
 // *
@@ -1108,7 +1242,7 @@ type ListJobsResponse struct {
 func (x *ListJobsResponse) Reset() {
 	*x = ListJobsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[13]
+		mi := &file_pb_operations_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1121,7 +1255,7 @@ func (x *ListJobsResponse) String() string {
 func (*ListJobsResponse) ProtoMessage() {}
 
 func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[13]
+	mi := &file_pb_operations_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1134,7 +1268,7 @@ func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListJobsResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{13}
+	return file_pb_operations_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListJobsResponse) GetJobs() []*Job {
@@ -1159,7 +1293,7 @@ type GetJobRequest struct {
 func (x *GetJobRequest) Reset() {
 	*x = GetJobRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[14]
+		mi := &file_pb_operations_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1172,7 +1306,7 @@ func (x *GetJobRequest) String() string {
 func (*GetJobRequest) ProtoMessage() {}
 
 func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[14]
+	mi := &file_pb_operations_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1185,7 +1319,7 @@ func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobRequest.ProtoReflect.Descriptor instead.
 func (*GetJobRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{14}
+	return file_pb_operations_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetJobRequest) GetId() string {
@@ -1222,7 +1356,7 @@ type GetJobResponse struct {
 func (x *GetJobResponse) Reset() {
 	*x = GetJobResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[15]
+		mi := &file_pb_operations_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1235,7 +1369,7 @@ func (x *GetJobResponse) String() string {
 func (*GetJobResponse) ProtoMessage() {}
 
 func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[15]
+	mi := &file_pb_operations_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1248,7 +1382,7 @@ func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobResponse.ProtoReflect.Descriptor instead.
 func (*GetJobResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{15}
+	return file_pb_operations_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetJobResponse) GetJob() *Job {
@@ -1271,7 +1405,7 @@ type CleanJobsRequest struct {
 func (x *CleanJobsRequest) Reset() {
 	*x = CleanJobsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[16]
+		mi := &file_pb_operations_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1284,7 +1418,7 @@ func (x *CleanJobsRequest) String() string {
 func (*CleanJobsRequest) ProtoMessage() {}
 
 func (x *CleanJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[16]
+	mi := &file_pb_operations_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1297,7 +1431,7 @@ func (x *CleanJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CleanJobsRequest.ProtoReflect.Descriptor instead.
 func (*CleanJobsRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{16}
+	return file_pb_operations_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CleanJobsRequest) GetNameLike() string {
@@ -1327,7 +1461,7 @@ type CleanJobsResponse struct {
 func (x *CleanJobsResponse) Reset() {
 	*x = CleanJobsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[17]
+		mi := &file_pb_operations_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1340,7 +1474,7 @@ func (x *CleanJobsResponse) String() string {
 func (*CleanJobsResponse) ProtoMessage() {}
 
 func (x *CleanJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[17]
+	mi := &file_pb_operations_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1353,7 +1487,7 @@ func (x *CleanJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CleanJobsResponse.ProtoReflect.Descriptor instead.
 func (*CleanJobsResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{17}
+	return file_pb_operations_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *CleanJobsResponse) GetCount() int32 {
@@ -1377,7 +1511,7 @@ type CancelJobRequest struct {
 func (x *CancelJobRequest) Reset() {
 	*x = CancelJobRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[18]
+		mi := &file_pb_operations_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1390,7 +1524,7 @@ func (x *CancelJobRequest) String() string {
 func (*CancelJobRequest) ProtoMessage() {}
 
 func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[18]
+	mi := &file_pb_operations_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1403,7 +1537,7 @@ func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelJobRequest.ProtoReflect.Descriptor instead.
 func (*CancelJobRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{18}
+	return file_pb_operations_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *CancelJobRequest) GetId() string {
@@ -1430,7 +1564,7 @@ type CancelJobResponse struct {
 func (x *CancelJobResponse) Reset() {
 	*x = CancelJobResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[19]
+		mi := &file_pb_operations_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1443,7 +1577,7 @@ func (x *CancelJobResponse) String() string {
 func (*CancelJobResponse) ProtoMessage() {}
 
 func (x *CancelJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[19]
+	mi := &file_pb_operations_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1456,7 +1590,7 @@ func (x *CancelJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelJobResponse.ProtoReflect.Descriptor instead.
 func (*CancelJobResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{19}
+	return file_pb_operations_proto_rawDescGZIP(), []int{21}
 }
 
 // *
@@ -1473,7 +1607,7 @@ type RetryJobRequest struct {
 func (x *RetryJobRequest) Reset() {
 	*x = RetryJobRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[20]
+		mi := &file_pb_operations_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1486,7 +1620,7 @@ func (x *RetryJobRequest) String() string {
 func (*RetryJobRequest) ProtoMessage() {}
 
 func (x *RetryJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[20]
+	mi := &file_pb_operations_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1499,7 +1633,7 @@ func (x *RetryJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryJobRequest.ProtoReflect.Descriptor instead.
 func (*RetryJobRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{20}
+	return file_pb_operations_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *RetryJobRequest) GetId() string {
@@ -1526,7 +1660,7 @@ type RetryJobResponse struct {
 func (x *RetryJobResponse) Reset() {
 	*x = RetryJobResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[21]
+		mi := &file_pb_operations_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1539,7 +1673,7 @@ func (x *RetryJobResponse) String() string {
 func (*RetryJobResponse) ProtoMessage() {}
 
 func (x *RetryJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[21]
+	mi := &file_pb_operations_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1552,7 +1686,7 @@ func (x *RetryJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryJobResponse.ProtoReflect.Descriptor instead.
 func (*RetryJobResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{21}
+	return file_pb_operations_proto_rawDescGZIP(), []int{23}
 }
 
 // *
@@ -1568,7 +1702,7 @@ type ContinueJobRequest struct {
 func (x *ContinueJobRequest) Reset() {
 	*x = ContinueJobRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[22]
+		mi := &file_pb_operations_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1581,7 +1715,7 @@ func (x *ContinueJobRequest) String() string {
 func (*ContinueJobRequest) ProtoMessage() {}
 
 func (x *ContinueJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[22]
+	mi := &file_pb_operations_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1594,7 +1728,7 @@ func (x *ContinueJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContinueJobRequest.ProtoReflect.Descriptor instead.
 func (*ContinueJobRequest) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{22}
+	return file_pb_operations_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ContinueJobRequest) GetId() string {
@@ -1614,7 +1748,7 @@ type ContinueJobResponse struct {
 func (x *ContinueJobResponse) Reset() {
 	*x = ContinueJobResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_pb_operations_proto_msgTypes[23]
+		mi := &file_pb_operations_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1627,7 +1761,7 @@ func (x *ContinueJobResponse) String() string {
 func (*ContinueJobResponse) ProtoMessage() {}
 
 func (x *ContinueJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pb_operations_proto_msgTypes[23]
+	mi := &file_pb_operations_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1640,7 +1774,7 @@ func (x *ContinueJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContinueJobResponse.ProtoReflect.Descriptor instead.
 func (*ContinueJobResponse) Descriptor() ([]byte, []int) {
-	return file_pb_operations_proto_rawDescGZIP(), []int{23}
+	return file_pb_operations_proto_rawDescGZIP(), []int{25}
 }
 
 var File_pb_operations_proto protoreflect.FileDescriptor
@@ -1703,87 +1837,111 @@ var file_pb_operations_proto_rawDesc = []byte{
 	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x52, 0x0e, 0x65, 0x78,
 	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x18, 0x0a, 0x07,
 	0x77, 0x61, 0x69, 0x74, 0x69, 0x6e, 0x67, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x77,
-	0x61, 0x69, 0x74, 0x69, 0x6e, 0x67, 0x22, 0x48, 0x0a, 0x14, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x44,
-	0x61, 0x74, 0x61, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x30,
-	0x0a, 0x09, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x12, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x74,
-	0x61, 0x69, 0x6e, 0x65, 0x72, 0x52, 0x09, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72,
-	0x22, 0x17, 0x0a, 0x15, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x44, 0x61, 0x74, 0x61, 0x73, 0x65, 0x74,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xb2, 0x03, 0x0a, 0x13, 0x43, 0x6f,
+	0x61, 0x69, 0x74, 0x69, 0x6e, 0x67, 0x22, 0x2a, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e,
+	0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12,
+	0x0a, 0x04, 0x75, 0x72, 0x69, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x75, 0x72,
+	0x69, 0x73, 0x22, 0x4b, 0x0a, 0x15, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e,
+	0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x0a, 0x63,
+	0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x12, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69,
+	0x6e, 0x65, 0x72, 0x52, 0x0a, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x73, 0x22,
+	0x48, 0x0a, 0x14, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x44, 0x61, 0x74, 0x61, 0x73, 0x65, 0x74, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x30, 0x0a, 0x09, 0x63, 0x6f, 0x6e, 0x74, 0x61,
+	0x69, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x67, 0x65, 0x6f,
+	0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x52, 0x09,
+	0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x22, 0x17, 0x0a, 0x15, 0x49, 0x6e, 0x64,
+	0x65, 0x78, 0x44, 0x61, 0x74, 0x61, 0x73, 0x65, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0xdc, 0x04, 0x0a, 0x13, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2d, 0x0a, 0x07, 0x64, 0x66,
+	0x6f, 0x72, 0x6d, 0x61, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x67, 0x65,
+	0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x44, 0x61, 0x74, 0x61, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74,
+	0x52, 0x07, 0x64, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x78, 0x70,
+	0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x01, 0x52, 0x08, 0x65, 0x78, 0x70,
+	0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x12, 0x2d, 0x0a, 0x10, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x5f,
+	0x6f, 0x76, 0x65, 0x72, 0x76, 0x69, 0x65, 0x77, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x42,
+	0x02, 0x18, 0x01, 0x52, 0x0f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x76,
+	0x69, 0x65, 0x77, 0x73, 0x12, 0x3a, 0x0a, 0x0e, 0x72, 0x65, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x69,
+	0x6e, 0x67, 0x5f, 0x61, 0x6c, 0x67, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x13, 0x2e, 0x67,
+	0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x69, 0x6e,
+	0x67, 0x52, 0x0d, 0x72, 0x65, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x69, 0x6e, 0x67, 0x41, 0x6c, 0x67,
+	0x12, 0x4a, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x28, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e,
+	0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52,
+	0x0b, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x59, 0x0a, 0x0f,
+	0x63, 0x72, 0x65, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18,
+	0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x30, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e,
+	0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0e, 0x63, 0x72, 0x65, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2d, 0x0a, 0x10, 0x62, 0x61, 0x6e, 0x64, 0x73,
+	0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6c, 0x65, 0x61, 0x76, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28,
+	0x08, 0x42, 0x02, 0x18, 0x01, 0x52, 0x0f, 0x62, 0x61, 0x6e, 0x64, 0x73, 0x49, 0x6e, 0x74, 0x65,
+	0x72, 0x6c, 0x65, 0x61, 0x76, 0x65, 0x12, 0x3a, 0x0a, 0x0d, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67,
+	0x65, 0x5f, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x15, 0x2e,
+	0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x43,
+	0x6c, 0x61, 0x73, 0x73, 0x52, 0x0c, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x43, 0x6c, 0x61,
+	0x73, 0x73, 0x1a, 0x41, 0x0a, 0x13, 0x43, 0x72, 0x65, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76,
+	0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x3a, 0x0a, 0x0b, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73,
+	0x73, 0x69, 0x6f, 0x6e, 0x12, 0x06, 0x0a, 0x02, 0x4e, 0x4f, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08,
+	0x4c, 0x4f, 0x53, 0x53, 0x4c, 0x45, 0x53, 0x53, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x4c, 0x4f,
+	0x53, 0x53, 0x59, 0x10, 0x02, 0x12, 0x0a, 0x0a, 0x06, 0x43, 0x55, 0x53, 0x54, 0x4f, 0x4d, 0x10,
+	0x03, 0x22, 0x8e, 0x01, 0x0a, 0x1a, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x6f, 0x6e, 0x73,
+	0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x49,
+	0x64, 0x12, 0x4f, 0x0a, 0x14, 0x63, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1c, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x13, 0x63,
+	0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x22, 0x1d, 0x0a, 0x1b, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x6f, 0x6e, 0x73,
+	0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x40, 0x0a, 0x1d, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c,
+	0x65, 0x49, 0x64, 0x22, 0x71, 0x0a, 0x1e, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4f, 0x0a, 0x14, 0x63, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f,
 	0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x12, 0x2d, 0x0a, 0x07, 0x64, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x13, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x44, 0x61, 0x74,
-	0x61, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x52, 0x07, 0x64, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74,
-	0x12, 0x1a, 0x0a, 0x08, 0x65, 0x78, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x01, 0x52, 0x08, 0x65, 0x78, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x12, 0x2d, 0x0a, 0x10,
-	0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x5f, 0x6f, 0x76, 0x65, 0x72, 0x76, 0x69, 0x65, 0x77, 0x73,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x42, 0x02, 0x18, 0x01, 0x52, 0x0f, 0x63, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x76, 0x69, 0x65, 0x77, 0x73, 0x12, 0x3a, 0x0a, 0x0e, 0x72,
-	0x65, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x69, 0x6e, 0x67, 0x5f, 0x61, 0x6c, 0x67, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x0e, 0x32, 0x13, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x52, 0x65,
-	0x73, 0x61, 0x6d, 0x70, 0x6c, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x72, 0x65, 0x73, 0x61, 0x6d, 0x70,
-	0x6c, 0x69, 0x6e, 0x67, 0x41, 0x6c, 0x67, 0x12, 0x4a, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x70, 0x72,
-	0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x28, 0x2e, 0x67,
-	0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x72,
-	0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73,
-	0x69, 0x6f, 0x6e, 0x12, 0x2d, 0x0a, 0x10, 0x62, 0x61, 0x6e, 0x64, 0x73, 0x5f, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x6c, 0x65, 0x61, 0x76, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x08, 0x42, 0x02, 0x18,
-	0x01, 0x52, 0x0f, 0x62, 0x61, 0x6e, 0x64, 0x73, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6c, 0x65, 0x61,
-	0x76, 0x65, 0x12, 0x3a, 0x0a, 0x0d, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x5f, 0x63, 0x6c,
-	0x61, 0x73, 0x73, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x15, 0x2e, 0x67, 0x65, 0x6f, 0x63,
-	0x75, 0x62, 0x65, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x43, 0x6c, 0x61, 0x73, 0x73,
-	0x52, 0x0c, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x22, 0x2e,
-	0x0a, 0x0b, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x06, 0x0a,
-	0x02, 0x4e, 0x4f, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x4c, 0x4f, 0x53, 0x53, 0x4c, 0x45, 0x53,
-	0x53, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x4c, 0x4f, 0x53, 0x53, 0x59, 0x10, 0x02, 0x22, 0x8e,
-	0x01, 0x0a, 0x1a, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1f, 0x0a,
-	0x0b, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0a, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x49, 0x64, 0x12, 0x4f,
-	0x0a, 0x14, 0x63, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f,
-	0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x67,
-	0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x13, 0x63, 0x6f, 0x6e, 0x73,
-	0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22,
-	0x1d, 0x0a, 0x1b, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x40,
-	0x0a, 0x1d, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76, 0x61, 0x72, 0x69, 0x61, 0x62, 0x6c, 0x65, 0x49, 0x64,
-	0x22, 0x71, 0x0a, 0x1e, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x4f, 0x0a, 0x14, 0x63, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x1c, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x6f,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x13,
-	0x63, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x22, 0xac, 0x02, 0x0a, 0x12, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x6a, 0x6f,
-	0x62, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6a, 0x6f,
-	0x62, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63,
-	0x65, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x69, 0x6e, 0x73, 0x74,
-	0x61, 0x6e, 0x63, 0x65, 0x49, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74,
-	0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6c, 0x61, 0x79,
-	0x6f, 0x75, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x40, 0x0a, 0x0f, 0x65, 0x78, 0x65, 0x63, 0x75,
-	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0e,
-	0x32, 0x17, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x45, 0x78, 0x65, 0x63, 0x75,
-	0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x52, 0x0e, 0x65, 0x78, 0x65, 0x63, 0x75,
-	0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x31, 0x0a, 0x07, 0x72, 0x65, 0x63,
-	0x6f, 0x72, 0x64, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x67, 0x65, 0x6f,
-	0x63, 0x75, 0x62, 0x65, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49, 0x64, 0x4c, 0x69, 0x73,
-	0x74, 0x48, 0x00, 0x52, 0x07, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x12, 0x32, 0x0a, 0x07,
-	0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e,
-	0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x46, 0x69,
-	0x6c, 0x74, 0x65, 0x72, 0x73, 0x48, 0x00, 0x52, 0x07, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x73,
-	0x42, 0x10, 0x0a, 0x0e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74,
-	0x65, 0x72, 0x22, 0x2c, 0x0a, 0x13, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x15, 0x0a, 0x06, 0x6a, 0x6f, 0x62,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6a, 0x6f, 0x62, 0x49, 0x64,
-	0x22, 0x2e, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x6e, 0x61, 0x6d, 0x65, 0x5f, 0x6c, 0x69, 0x6b, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6e, 0x61, 0x6d, 0x65, 0x4c, 0x69, 0x6b, 0x65,
+	0x73, 0x52, 0x13, 0x63, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0xdf, 0x02, 0x0a, 0x12, 0x43, 0x6f, 0x6e, 0x73, 0x6f,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a,
+	0x08, 0x6a, 0x6f, 0x62, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x6a, 0x6f, 0x62, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x69, 0x6e, 0x73, 0x74,
+	0x61, 0x6e, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x69,
+	0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x49, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x6c, 0x61, 0x79,
+	0x6f, 0x75, 0x74, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a,
+	0x6c, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x40, 0x0a, 0x0f, 0x65, 0x78,
+	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x06, 0x20,
+	0x01, 0x28, 0x0e, 0x32, 0x17, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x45, 0x78,
+	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x52, 0x0e, 0x65, 0x78,
+	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x31, 0x0a, 0x15,
+	0x63, 0x6f, 0x6c, 0x6c, 0x61, 0x70, 0x73, 0x65, 0x5f, 0x6f, 0x6e, 0x5f, 0x72, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x12, 0x63, 0x6f, 0x6c,
+	0x6c, 0x61, 0x70, 0x73, 0x65, 0x4f, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49, 0x64, 0x12,
+	0x31, 0x0a, 0x07, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x15, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x49, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x48, 0x00, 0x52, 0x07, 0x72, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x73, 0x12, 0x32, 0x0a, 0x07, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x73, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x52, 0x65,
+	0x63, 0x6f, 0x72, 0x64, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x73, 0x48, 0x00, 0x52, 0x07, 0x66,
+	0x69, 0x6c, 0x74, 0x65, 0x72, 0x73, 0x42, 0x10, 0x0a, 0x0e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x72, 0x22, 0x2c, 0x0a, 0x13, 0x43, 0x6f, 0x6e, 0x73,
+	0x6f, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x15, 0x0a, 0x06, 0x6a, 0x6f, 0x62, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x05, 0x6a, 0x6f, 0x62, 0x49, 0x64, 0x22, 0x58, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x4a, 0x6f,
+	0x62, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x6e, 0x61, 0x6d,
+	0x65, 0x5f, 0x6c, 0x69, 0x6b, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6e, 0x61,
+	0x6d, 0x65, 0x4c, 0x69, 0x6b, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x69,
+	0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74,
 	0x22, 0x34, 0x0a, 0x10, 0x4c, 0x69, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x20, 0x0a, 0x04, 0x6a, 0x6f, 0x62, 0x73, 0x18, 0x01, 0x20, 0x03,
 	0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x67, 0x65, 0x6f, 0x63, 0x75, 0x62, 0x65, 0x2e, 0x4a, 0x6f, 0x62,
@@ -1849,7 +2007,7 @@ func file_pb_operations_proto_rawDescGZIP() []byte {
 }
 
 var file_pb_operations_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_pb_operations_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_pb_operations_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_pb_operations_proto_goTypes = []interface{}{
 	(StorageClass)(0),                      // 0: geocube.StorageClass
 	(ExecutionLevel)(0),                    // 1: geocube.ExecutionLevel
@@ -1857,56 +2015,61 @@ var file_pb_operations_proto_goTypes = []interface{}{
 	(*Dataset)(nil),                        // 3: geocube.Dataset
 	(*Container)(nil),                      // 4: geocube.Container
 	(*Job)(nil),                            // 5: geocube.Job
-	(*IndexDatasetsRequest)(nil),           // 6: geocube.IndexDatasetsRequest
-	(*IndexDatasetsResponse)(nil),          // 7: geocube.IndexDatasetsResponse
-	(*ConsolidationParams)(nil),            // 8: geocube.ConsolidationParams
-	(*ConfigConsolidationRequest)(nil),     // 9: geocube.ConfigConsolidationRequest
-	(*ConfigConsolidationResponse)(nil),    // 10: geocube.ConfigConsolidationResponse
-	(*GetConsolidationParamsRequest)(nil),  // 11: geocube.GetConsolidationParamsRequest
-	(*GetConsolidationParamsResponse)(nil), // 12: geocube.GetConsolidationParamsResponse
-	(*ConsolidateRequest)(nil),             // 13: geocube.ConsolidateRequest
-	(*ConsolidateResponse)(nil),            // 14: geocube.ConsolidateResponse
-	(*ListJobsRequest)(nil),                // 15: geocube.ListJobsRequest
-	(*ListJobsResponse)(nil),               // 16: geocube.ListJobsResponse
-	(*GetJobRequest)(nil),                  // 17: geocube.GetJobRequest
-	(*GetJobResponse)(nil),                 // 18: geocube.GetJobResponse
-	(*CleanJobsRequest)(nil),               // 19: geocube.CleanJobsRequest
-	(*CleanJobsResponse)(nil),              // 20: geocube.CleanJobsResponse
-	(*CancelJobRequest)(nil),               // 21: geocube.CancelJobRequest
-	(*CancelJobResponse)(nil),              // 22: geocube.CancelJobResponse
-	(*RetryJobRequest)(nil),                // 23: geocube.RetryJobRequest
-	(*RetryJobResponse)(nil),               // 24: geocube.RetryJobResponse
-	(*ContinueJobRequest)(nil),             // 25: geocube.ContinueJobRequest
-	(*ContinueJobResponse)(nil),            // 26: geocube.ContinueJobResponse
-	(*DataFormat)(nil),                     // 27: geocube.DataFormat
-	(*timestamppb.Timestamp)(nil),          // 28: google.protobuf.Timestamp
-	(Resampling)(0),                        // 29: geocube.Resampling
-	(*RecordIdList)(nil),                   // 30: geocube.RecordIdList
-	(*RecordFilters)(nil),                  // 31: geocube.RecordFilters
+	(*GetContainersRequest)(nil),           // 6: geocube.GetContainersRequest
+	(*GetContainersResponse)(nil),          // 7: geocube.GetContainersResponse
+	(*IndexDatasetsRequest)(nil),           // 8: geocube.IndexDatasetsRequest
+	(*IndexDatasetsResponse)(nil),          // 9: geocube.IndexDatasetsResponse
+	(*ConsolidationParams)(nil),            // 10: geocube.ConsolidationParams
+	(*ConfigConsolidationRequest)(nil),     // 11: geocube.ConfigConsolidationRequest
+	(*ConfigConsolidationResponse)(nil),    // 12: geocube.ConfigConsolidationResponse
+	(*GetConsolidationParamsRequest)(nil),  // 13: geocube.GetConsolidationParamsRequest
+	(*GetConsolidationParamsResponse)(nil), // 14: geocube.GetConsolidationParamsResponse
+	(*ConsolidateRequest)(nil),             // 15: geocube.ConsolidateRequest
+	(*ConsolidateResponse)(nil),            // 16: geocube.ConsolidateResponse
+	(*ListJobsRequest)(nil),                // 17: geocube.ListJobsRequest
+	(*ListJobsResponse)(nil),               // 18: geocube.ListJobsResponse
+	(*GetJobRequest)(nil),                  // 19: geocube.GetJobRequest
+	(*GetJobResponse)(nil),                 // 20: geocube.GetJobResponse
+	(*CleanJobsRequest)(nil),               // 21: geocube.CleanJobsRequest
+	(*CleanJobsResponse)(nil),              // 22: geocube.CleanJobsResponse
+	(*CancelJobRequest)(nil),               // 23: geocube.CancelJobRequest
+	(*CancelJobResponse)(nil),              // 24: geocube.CancelJobResponse
+	(*RetryJobRequest)(nil),                // 25: geocube.RetryJobRequest
+	(*RetryJobResponse)(nil),               // 26: geocube.RetryJobResponse
+	(*ContinueJobRequest)(nil),             // 27: geocube.ContinueJobRequest
+	(*ContinueJobResponse)(nil),            // 28: geocube.ContinueJobResponse
+	nil,                                    // 29: geocube.ConsolidationParams.CreationParamsEntry
+	(*DataFormat)(nil),                     // 30: geocube.DataFormat
+	(*timestamppb.Timestamp)(nil),          // 31: google.protobuf.Timestamp
+	(Resampling)(0),                        // 32: geocube.Resampling
+	(*RecordIdList)(nil),                   // 33: geocube.RecordIdList
+	(*RecordFilters)(nil),                  // 34: geocube.RecordFilters
 }
 var file_pb_operations_proto_depIdxs = []int32{
-	27, // 0: geocube.Dataset.dformat:type_name -> geocube.DataFormat
+	30, // 0: geocube.Dataset.dformat:type_name -> geocube.DataFormat
 	3,  // 1: geocube.Container.datasets:type_name -> geocube.Dataset
-	28, // 2: geocube.Job.creation_time:type_name -> google.protobuf.Timestamp
-	28, // 3: geocube.Job.last_update_time:type_name -> google.protobuf.Timestamp
+	31, // 2: geocube.Job.creation_time:type_name -> google.protobuf.Timestamp
+	31, // 3: geocube.Job.last_update_time:type_name -> google.protobuf.Timestamp
 	1,  // 4: geocube.Job.execution_level:type_name -> geocube.ExecutionLevel
-	4,  // 5: geocube.IndexDatasetsRequest.container:type_name -> geocube.Container
-	27, // 6: geocube.ConsolidationParams.dformat:type_name -> geocube.DataFormat
-	29, // 7: geocube.ConsolidationParams.resampling_alg:type_name -> geocube.Resampling
-	2,  // 8: geocube.ConsolidationParams.compression:type_name -> geocube.ConsolidationParams.Compression
-	0,  // 9: geocube.ConsolidationParams.storage_class:type_name -> geocube.StorageClass
-	8,  // 10: geocube.ConfigConsolidationRequest.consolidation_params:type_name -> geocube.ConsolidationParams
-	8,  // 11: geocube.GetConsolidationParamsResponse.consolidation_params:type_name -> geocube.ConsolidationParams
-	1,  // 12: geocube.ConsolidateRequest.execution_level:type_name -> geocube.ExecutionLevel
-	30, // 13: geocube.ConsolidateRequest.records:type_name -> geocube.RecordIdList
-	31, // 14: geocube.ConsolidateRequest.filters:type_name -> geocube.RecordFilters
-	5,  // 15: geocube.ListJobsResponse.jobs:type_name -> geocube.Job
-	5,  // 16: geocube.GetJobResponse.job:type_name -> geocube.Job
-	17, // [17:17] is the sub-list for method output_type
-	17, // [17:17] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	4,  // 5: geocube.GetContainersResponse.containers:type_name -> geocube.Container
+	4,  // 6: geocube.IndexDatasetsRequest.container:type_name -> geocube.Container
+	30, // 7: geocube.ConsolidationParams.dformat:type_name -> geocube.DataFormat
+	32, // 8: geocube.ConsolidationParams.resampling_alg:type_name -> geocube.Resampling
+	2,  // 9: geocube.ConsolidationParams.compression:type_name -> geocube.ConsolidationParams.Compression
+	29, // 10: geocube.ConsolidationParams.creation_params:type_name -> geocube.ConsolidationParams.CreationParamsEntry
+	0,  // 11: geocube.ConsolidationParams.storage_class:type_name -> geocube.StorageClass
+	10, // 12: geocube.ConfigConsolidationRequest.consolidation_params:type_name -> geocube.ConsolidationParams
+	10, // 13: geocube.GetConsolidationParamsResponse.consolidation_params:type_name -> geocube.ConsolidationParams
+	1,  // 14: geocube.ConsolidateRequest.execution_level:type_name -> geocube.ExecutionLevel
+	33, // 15: geocube.ConsolidateRequest.records:type_name -> geocube.RecordIdList
+	34, // 16: geocube.ConsolidateRequest.filters:type_name -> geocube.RecordFilters
+	5,  // 17: geocube.ListJobsResponse.jobs:type_name -> geocube.Job
+	5,  // 18: geocube.GetJobResponse.job:type_name -> geocube.Job
+	19, // [19:19] is the sub-list for method output_type
+	19, // [19:19] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_pb_operations_proto_init() }
@@ -1955,7 +2118,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*IndexDatasetsRequest); i {
+			switch v := v.(*GetContainersRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1967,7 +2130,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*IndexDatasetsResponse); i {
+			switch v := v.(*GetContainersResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1979,7 +2142,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsolidationParams); i {
+			switch v := v.(*IndexDatasetsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1991,7 +2154,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConfigConsolidationRequest); i {
+			switch v := v.(*IndexDatasetsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2003,7 +2166,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConfigConsolidationResponse); i {
+			switch v := v.(*ConsolidationParams); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2015,7 +2178,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetConsolidationParamsRequest); i {
+			switch v := v.(*ConfigConsolidationRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2027,7 +2190,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetConsolidationParamsResponse); i {
+			switch v := v.(*ConfigConsolidationResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2039,7 +2202,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsolidateRequest); i {
+			switch v := v.(*GetConsolidationParamsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2051,7 +2214,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsolidateResponse); i {
+			switch v := v.(*GetConsolidationParamsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2063,7 +2226,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListJobsRequest); i {
+			switch v := v.(*ConsolidateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2075,7 +2238,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListJobsResponse); i {
+			switch v := v.(*ConsolidateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2087,7 +2250,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetJobRequest); i {
+			switch v := v.(*ListJobsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2099,7 +2262,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetJobResponse); i {
+			switch v := v.(*ListJobsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2111,7 +2274,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CleanJobsRequest); i {
+			switch v := v.(*GetJobRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2123,7 +2286,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CleanJobsResponse); i {
+			switch v := v.(*GetJobResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2135,7 +2298,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CancelJobRequest); i {
+			switch v := v.(*CleanJobsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2147,7 +2310,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CancelJobResponse); i {
+			switch v := v.(*CleanJobsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2159,7 +2322,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RetryJobRequest); i {
+			switch v := v.(*CancelJobRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2171,7 +2334,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RetryJobResponse); i {
+			switch v := v.(*CancelJobResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2183,7 +2346,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ContinueJobRequest); i {
+			switch v := v.(*RetryJobRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2195,6 +2358,30 @@ func file_pb_operations_proto_init() {
 			}
 		}
 		file_pb_operations_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RetryJobResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pb_operations_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ContinueJobRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_pb_operations_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ContinueJobResponse); i {
 			case 0:
 				return &v.state
@@ -2207,7 +2394,7 @@ func file_pb_operations_proto_init() {
 			}
 		}
 	}
-	file_pb_operations_proto_msgTypes[10].OneofWrappers = []interface{}{
+	file_pb_operations_proto_msgTypes[12].OneofWrappers = []interface{}{
 		(*ConsolidateRequest_Records)(nil),
 		(*ConsolidateRequest_Filters)(nil),
 	}
@@ -2217,7 +2404,7 @@ func file_pb_operations_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_pb_operations_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   24,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
