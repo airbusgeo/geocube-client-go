@@ -84,6 +84,15 @@ func main() {
 			Usage:   "handle records",
 			Subcommands: []cli.Command{
 				{
+					Name:        "get",
+					Usage:       "get records",
+					Action:      cliGetRecords,
+					Description: "ex: ./cmd/cli/cli --srv 127.0.0.1:8080 --insecure records get --id d0d6f8a4-5b9f-4ee4-a53a-75c990e8f890 --id d0d6f8a4-5b9f-4ee4-a53a-75c990e8f891",
+					Flags: []cli.Flag{
+						cli.StringSliceFlag{Name: "id", Required: true, Usage: "only display specific attributes (among name, id, aoi-id, datetime)"},
+					},
+				},
+				{
 					Name:        "list",
 					Usage:       "list records",
 					Action:      cliListRecords,
@@ -468,6 +477,16 @@ func main() {
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func cliGetRecords(c *cli.Context) {
+	records, err := client.GetRecords(context.Background(), c.StringSlice("id"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, record := range records {
+		fmt.Println(record.ToString())
 	}
 }
 

@@ -199,6 +199,28 @@ func (c Client) streamListRecords(ctx context.Context, name string, tags map[str
 	return res, grpcError(err)
 }
 
+// GetRecords get records from given ids
+func (c Client) GetRecords(ctx context.Context, ids []string) ([]*Record, error) {
+	streamrecords, err := c.gcc.GetRecords(ctx, &pb.GetRecordsRequest{Ids: ids})
+	if err != nil {
+		return nil, err
+	}
+	records := []*Record{}
+
+	for {
+		resp, err := streamrecords.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, recordFromPb(resp.Record))
+	}
+
+	return records, nil
+}
+
 // ListRecords lists records that fit the search parameters (all are optionnal)
 func (c Client) ListRecords(ctx context.Context, name string, tags map[string]string, aoi AOI, fromTime, toTime time.Time, limit, page int, returnAOI bool) ([]*Record, error) {
 	streamrecords, err := c.streamListRecords(ctx, name, tags, aoi, fromTime, toTime, limit, page, returnAOI)
