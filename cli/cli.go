@@ -228,6 +228,8 @@ func main() {
 						cli.IntFlag{Name: "compression", Value: 0, Usage: "compression level (0: uncompressed, 1 to 9: fastest to best compression)"},
 						cli.StringFlag{Name: "crs", Required: true, Usage: "proj4, wkt, epsg crs"},
 						cli.BoolFlag{Name: "headers-only", Usage: "returns only image headers"},
+						cli.StringFlag{Name: "dformat", Usage: "[With Downloader only] force the dataformat of the ouput: dtype[bool, int8-16-32 uint8-16-32 float32-64 complex64],nodata,minvalue,maxvalue"},
+						cli.BoolFlag{Name: "predownload", Usage: "[With Downloader only] advise the downloader to predownload the files before merging them"},
 					},
 				},
 				{
@@ -660,10 +662,7 @@ func cliTileAOI(c *cli.Context) {
 }
 
 func cliGetCube(c *cli.Context) {
-	var (
-		err    error
-		cubeit *gcclient.CubeIterator
-	)
+	var err error
 	instancesID := toSlice(c.String("instances-id"), ",")
 	tr := c.String("transform")
 	if len(tr) > 2 && tr[0] == '(' && tr[len(tr)-1] == ')' {
@@ -680,15 +679,23 @@ func cliGetCube(c *cli.Context) {
 			log.Fatalf("Invalid value for transform: %s (%v)", pixToCrsS[i], err)
 		}
 	}
-	headersOnly := c.Bool("headers-only")
 
-	outputFormat := gcclient.Format_GTiff
+	var from gcclient.FromOption
 	outputExt := "tif"
+	options := []gcclient.GetCubeOption{
+		gcclient.WithCompression(c.Int("compression")),
+		gcclient.WithFileFormat(gcclient.Format_GTiff),
+	}
+	headersOnly := c.Bool("headers-only")
+	if headersOnly {
+		options = append(options, gcclient.WithHeadersOnly())
+	}
+	if c.Bool("predownload") {
+		options = append(options, gcclient.WithPredownload())
+	}
 
 	if c.IsSet("records-id") {
-		recordsID := toSlice(c.String("records-id"), ",")
-		cubeit, err = client.GetCubeFromRecords(context.Background(), recordsID, instancesID[0], c.String("crs"), p2c, int32(c.Int("size-x")), int32(c.Int("size-y")), outputFormat, c.Int("compression"), headersOnly)
-
+		from = gcclient.FromRecords(toSlice(c.String("records-id"), ","))
 	} else {
 		var fromT, toT time.Time
 		if c.IsSet("from-time") {
@@ -698,8 +705,18 @@ func cliGetCube(c *cli.Context) {
 			toT = mustParseTime(c.String("to-time"))
 		}
 		tags := mustParseDict(c.StringSlice("tag"))
-		cubeit, err = client.GetCubeFromFilters(context.Background(), tags, fromT, toT, instancesID[0], c.String("crs"), p2c, int32(c.Int("size-x")), int32(c.Int("size-y")), outputFormat, c.Int("compression"), headersOnly)
+		from = gcclient.FromFilters(tags, fromT, toT)
 	}
+
+	if c.IsSet("dformat") {
+		dformat, err := gcclient.ToDFormat(c.String("dformat"))
+		if err != nil {
+			log.Fatalf("Parse dformat: %v", err)
+		}
+		options = append(options, gcclient.WithDataFormat(dformat))
+	}
+
+	cubeit, err := client.GetCube(context.Background(), from, instancesID[0], gcclient.OnGeoTransform(c.String("crs"), p2c, int32(c.Int("size-x")), int32(c.Int("size-y"))), options...)
 
 	if err != nil {
 		log.Fatal(err)
@@ -740,8 +757,8 @@ func cliGetCube(c *cli.Context) {
 	if cubeit.Err() != nil {
 		log.Fatal(cubeit.Err().Error())
 	}
-}
 
+}
 func cliGetContainers(c *cli.Context) {
 	uris := c.StringSlice("uri")
 	containers, err := client.GetContainers(context.Background(), uris)
